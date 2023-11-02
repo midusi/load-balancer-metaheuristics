@@ -39,6 +39,7 @@ Los datasets utilizados son:
   - Genes: 19293
   - Objetivo: utilizar como datos de testing en pruebas reales con los modelos ya entrenados por los otros datasets de entrenamiento de tiempos
 
+Se pueden descargar los archivos ya listos para utilizar desde esta carpeta en [Drive][datasets-drive]
 Todos pueden encontrarse listados en [la página de datasets de cBioPortal][cbioportal-datasets]). Los archivos requeridos son `data_clinical_patient.txt` y `data_mrna_seq_v2_rsem_zscores_ref_normal_samples.txt`, y deben ponerse en las respectivas carpetas dentro de `Datasets`.
 
 
@@ -156,6 +157,7 @@ Para organizar todos los resultados se realizan los siguientes pasos:
 
 
 [scikit-survival-blog]: https://scikit-survival.readthedocs.io/en/stable/user_guide/understanding_predictions.html
+[datasets-drive]: https://drive.google.com/drive/folders/1g7DnPkV7MtbLBHrGLWpCnRWV2LRW6v9-?usp=sharing
 [breast-dataset]: https://cbioportal-datahub.s3.amazonaws.com/brca_tcga_pan_can_atlas_2018.tar.gz
 [lung-dataset]: https://cbioportal-datahub.s3.amazonaws.com/luad_tcga_pan_can_atlas_2018.tar.gz
 [renal-dataset]: https://cbioportal-datahub.s3.amazonaws.com/kirp_tcga_pan_can_atlas_2018.tar.gz

@@ -4,6 +4,7 @@ from typing import Literal
 import binpacking
 import numpy as np
 from metaheuristics import get_random_subset_of_features
+import matplotlib.pyplot as plt
 
 # Dict with the partition identifier as key and the worker identifier on which the partition will be computed as value
 PartitionToWorker = dict[int, str]
@@ -27,6 +28,7 @@ N_FEATURES = 5
 # To print useful information
 DEBUG = True
 
+
 class Rdd:
     """
     Simulates the RDD class of Spark. An RDD has a subset of features and a partition to define in which worker
@@ -41,6 +43,7 @@ class Rdd:
 
     def __repr__(self):
         return f"Rdd(partition={self.partition}, n_features={np.count_nonzero(self.subset)})"
+
 
 def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker):
     """
@@ -66,15 +69,14 @@ def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker):
         else:
             worker_execution_times[worker_id] = [worker_execution_time]
 
-
-
     # Gets max sum of execution times
     max_worker_time = -1
     for worker_id in worker_execution_times:
         sum_worker_time = np.sum(worker_execution_times[worker_id])
 
         if DEBUG:
-            print(f'Worker {worker_id} has executed {len(worker_execution_times[worker_id])} RDDs in {sum_worker_time} seconds')
+            print(f'Worker {worker_id} has executed {len(worker_execution_times[worker_id])} RDDs in '
+                  f'{sum_worker_time} seconds')
 
         if sum_worker_time > max_worker_time:
             max_worker_time = sum_worker_time
@@ -136,14 +138,16 @@ def __binpacking_strategy(rdds: list[Rdd]) -> list[Rdd]:
 
     return res_rdd
 
+
 def __assign_partitions(rdds: list[Rdd], strategy: PartitionStrategy) -> list[Rdd]:
-    """Assigns the partition to each RDD depending on the strategy. TODO: implement"""
+    """Assigns the partition to each RDD depending on the strategy. TODO: implement smart strategy"""
     if strategy == 'binpacking':
         return __binpacking_strategy(rdds)
     if strategy == 'n_stars':
         # Sepa
         len_rdds = len(rdds)
         return [Rdd(i * N_WORKERS // len(rdds), rdds[i].subset) for i in range(len_rdds)]
+
 
 def main():
     rdds: list[Rdd] = []
@@ -157,21 +161,43 @@ def main():
         print(rdds)
 
     # Assigns the partition to each RDD
-    rdds = __assign_partitions(rdds, STRATEGY)  # TODO: send strategy
+    rdds = __assign_partitions(rdds, STRATEGY)
 
     if DEBUG:
         print('rdds after assign partitions')
         print(rdds)
 
     # Generates partition to worker dict
-    partition_to_worker: PartitionToWorker = {partition_id: f'worker_{partition_id}' for partition_id in range(N_WORKERS)}
+    partition_to_worker: PartitionToWorker = {partition_id: f'worker_{partition_id}' for partition_id in
+                                              range(N_WORKERS)}
 
     # Executes the simulation
-    worker_execution_times, idle_times = collect(rdds, partition_to_worker)
+    worker_execution_times, worker_idle_times = collect(rdds, partition_to_worker)
 
     if DEBUG:
         print(f'worker_execution_times: {worker_execution_times}')
-        print(f'idle_times: {idle_times}')
+        print(f'idle_times: {worker_idle_times}')
+
+    # Plots the execution times in bar chart for each worker
+    __plot_bars('Execution', worker_execution_times)
+    __plot_bars('Idle', worker_idle_times)
+    plt.show()
+
+
+def __plot_bars(title: Literal['Execution', 'Idle'], times: dict[str, list[float]]):
+    """Plots the execution/idle times in bar chart for each worker."""
+    values = [np.sum(values) for values in times.values()]
+    fig, ax = plt.subplots()
+    plt.bar(times.keys(), values)
+    ax.set_title(f'{title} times for each worker')
+    ax.set_xlabel('Worker')
+    ax.set_ylabel('Execution time (s)')
+
+    # Shows value on top of each bar
+    for index, value in enumerate(values):
+        plt.text(index, value, str(round(value, 2)), ha='center', va='bottom')
+
+    plt.legend()
 
 
 if __name__ == '__main__':
