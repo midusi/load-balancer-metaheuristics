@@ -1,0 +1,77 @@
+"/home/genaro/Proyectos/Paper Binary Black Hole Algorithm/venv/bin/python" /home/genaro/Proyectos/Paper Binary Black Hole Algorithm/load_balancer_model.py
+/home/genaro/Proyectos/Paper Binary Black Hole Algorithm/venv/lib/python3.10/site-packages/sklearn/base.py:443: UserWarning: X has feature names, but MinMaxScaler was fitted without feature names
+  warnings.warn(
+Min and max values of Number of features: 1.0 and 28787.0
+Min and max values of Number of samples: 100.0 and 1068.0
+Used features: Number of features, Number of samples, Algorithm, Number of clusters, Scoring method
+Used Y: Execution time
+Training clustering with 40324 rows
+LinearRegression
+LinearRegression no MinMax
+The model "LinearRegression()" has obtained a R2 = -0.9007959621029877 and a MSE = 0.04265481716054654
+LinearRegression (degree=2)
+LinearRegression no MinMax (degree=2)
+The model "LinearRegression()" has obtained a R2 = -1.2131143317101727 and a MSE = 0.04966339841654601
+LinearRegression (degree=3)
+LinearRegression no MinMax (degree=3)
+The model "LinearRegression()" has obtained a R2 = -2.4117248628619286 and a MSE = 0.0765608214289659
+HistGradientBoostingRegressor
+The model "HistGradientBoostingRegressor(learning_rate=0.01, max_depth=6, max_iter=400,
+                              max_leaf_nodes=41, min_samples_leaf=10)" has obtained a R2 = 0.9412992311065399 and a MSE = 0.0013172747702829839
+HistGradientBoostingRegressor no MinMax
+The model "HistGradientBoostingRegressor(learning_rate=0.01, max_depth=6, max_iter=400,
+                              max_leaf_nodes=41, min_samples_leaf=10)" has obtained a R2 = 0.9466911187207769 and a MSE = 0.0011962781010344664
+MLPRegressor
+The model "MLPRegressor(hidden_layer_sizes=[4, 4, 3], max_iter=1000)" has obtained a R2 = 0.29631348475612473 and a MSE = 0.014719009477432782
+MLPRegressor no MinMax
+The model "MLPRegressor(hidden_layer_sizes=[4, 4, 3], max_iter=1000)" has obtained a R2 = -0.5119707969785308 and a MSE = 0.03162589023411344
+/home/genaro/Proyectos/Paper Binary Black Hole Algorithm/venv/lib/python3.10/site-packages/sklearn/base.py:443: UserWarning: X has feature names, but MinMaxScaler was fitted without feature names
+  warnings.warn(
+Used features: Number of features, Number of samples, Kernel, Optimizer
+Used Y: Execution time
+Training svm with 23430 rows
+LinearRegression
+LinearRegression no MinMax
+The model "LinearRegression()" has obtained a R2 = -0.21733967476292038 and a MSE = 0.02288773674740247
+LinearRegression (degree=2)
+LinearRegression no MinMax (degree=2)
+The model "LinearRegression()" has obtained a R2 = -0.8230215863220864 and a MSE = 0.03427542781820363
+LinearRegression (degree=3)
+LinearRegression no MinMax (degree=3)
+The model "LinearRegression()" has obtained a R2 = -1.1014332635671362 and a MSE = 0.042024804636268495
+HistGradientBoostingRegressor
+The model "HistGradientBoostingRegressor(learning_rate=0.2, max_depth=4, max_iter=300,
+                              max_leaf_nodes=41)" has obtained a R2 = 0.650207542122392 and a MSE = 0.003927307662256656
+HistGradientBoostingRegressor no MinMax
+The model "HistGradientBoostingRegressor(learning_rate=0.2, max_depth=4, max_iter=300,
+                              max_leaf_nodes=41)" has obtained a R2 = 0.7623593997387854 and a MSE = 0.0026681185635960615
+MLPRegressor
+The model "MLPRegressor(hidden_layer_sizes=[4, 4, 3], max_iter=1000)" has obtained a R2 = -0.27478216100188346 and a MSE = 0.02396773810643952
+MLPRegressor no MinMax
+The model "MLPRegressor(hidden_layer_sizes=[4, 4, 3], max_iter=1000)" has obtained a R2 = -0.31053144342997197 and a MSE = 0.024639876033170593
+Used features: Number of features, Number of samples, Number of trees
+Used Y: Execution time
+Training rf with 11990 rows
+LinearRegression
+LinearRegression no MinMax
+The model "LinearRegression()" has obtained a R2 = -448.4997660217538 and a MSE = 18.06909113263818
+LinearRegression (degree=2)
+LinearRegression no MinMax (degree=2)
+/home/genaro/Proyectos/Paper Binary Black Hole Algorithm/venv/lib/python3.10/site-packages/sklearn/base.py:443: UserWarning: X has feature names, but MinMaxScaler was fitted without feature names
+  warnings.warn(
+The model "LinearRegression()" has obtained a R2 = -19.789745888262786 and a MSE = 0.4538764547427444
+LinearRegression (degree=3)
+LinearRegression no MinMax (degree=3)
+The model "LinearRegression()" has obtained a R2 = -2.962161359657293 and a MSE = 0.1577606910212287
+HistGradientBoostingRegressor
+The model "HistGradientBoostingRegressor(learning_rate=0.01, max_depth=2, max_iter=400,
+                              min_samples_leaf=40)" has obtained a R2 = -4.474610857493685 and a MSE = 0.11952031450746135
+HistGradientBoostingRegressor no MinMax
+The model "HistGradientBoostingRegressor(learning_rate=0.01, max_depth=2, max_iter=400,
+                              min_samples_leaf=40)" has obtained a R2 = -4.845180078070596 and a MSE = 0.1276104876618714
+MLPRegressor
+The model "MLPRegressor(hidden_layer_sizes=[4, 4, 3], max_iter=1000)" has obtained a R2 = -8.914766315980545 and a MSE = 0.39855597191477443
+MLPRegressor no MinMax
+The model "MLPRegressor(hidden_layer_sizes=[4, 4, 3], max_iter=1000)" has obtained a R2 = -3.9089406359724794 and a MSE = 0.19545843710418526
+
+Process finished with exit code 0

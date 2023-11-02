@@ -1,0 +1,2 @@
+,dataset,Improved BBHA,Model,concordance-index with all the features,Best concordance-index (in 10 runs),Features with best concordance-index (in 10 runs),CPU execution time (10 runs) in seconds
+0,Kidney_Renal_Papillary_Cell_Carcinoma,0,svm,0.6533,0.8535,ACTL8 | ARMC8 | B4GALT5 | CPXCR1 | DULLARD | GABRG2 | GTSF1L | HIRIP3 | IL2RG | MBD2 | MPO | MRGPRX3 | NCOA5 | P2RX3 | PRSS42 | REN | SLC38A9 | SPARC | TFAMP1 | TXNL4B | ZNF454,23051.518

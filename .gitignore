@@ -1,0 +1,7 @@
+.idea
+venv/
+__pycache__/
+
+Results/*
+!Results/results_to_push/
+*.zip
