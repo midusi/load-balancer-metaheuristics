@@ -1,6 +1,6 @@
 import time
 from copy import deepcopy
-from typing import Literal
+from typing import Literal, Final, Optional
 import binpacking
 import numpy as np
 from metaheuristics import get_random_subset_of_features
@@ -16,17 +16,19 @@ WorkerTimes = dict[str, list[float]]
 PartitionStrategy = Literal['n_stars', 'binpacking', 'smart']
 
 # Strategy to define partitions
-STRATEGY: PartitionStrategy = 'n_stars'
+STRATEGY: Final[PartitionStrategy] = 'n_stars'
 
-# TODO: implement random_seed to replicate experiments
+# Seed for reproducibility
+RANDOM_SEED: Final[Optional[int]] = 12
 
 # Some constants
-N_WORKERS = 3
-N_STARS = 6
-N_FEATURES = 5
+N_WORKERS: Final = 3
+N_STARS: Final = 6
+N_FEATURES: Final = 5
+ITERATIONS: Final = 2
 
 # To print useful information
-DEBUG = True
+DEBUG: Final = True
 
 
 class Rdd:
@@ -98,8 +100,11 @@ def __fitness_function(subset: np.ndarray) -> int:
     return len(subset)
 
 
-def __predict(subset: np.ndarray) -> np.ndarray:
+def __predict(subset: np.ndarray, random_seed: Optional[int]) -> float:
     """Simulates the predict function. It will return the number of features +- some random epsilon."""
+    if random_seed is not None:
+        np.random.seed(random_seed)
+
     return np.count_nonzero(subset) + np.random.uniform(-1, 1)
 
 
@@ -118,7 +123,11 @@ def __generate_stars_and_partitions_bins(bins: list) -> dict[int, int]:
 
 def __binpacking_strategy(rdds: list[Rdd]) -> list[Rdd]:
     res_rdd = deepcopy(rdds)
-    stars_and_times: dict[str, float] = {idx: __predict(rdd.subset) for (idx, rdd) in enumerate(res_rdd)}
+
+    stars_and_times: dict[str, float] = {}
+    for (idx, rdd) in enumerate(res_rdd):
+        random_seed = RANDOM_SEED + idx if RANDOM_SEED is not None else None
+        stars_and_times[idx] = __predict(rdd.subset, random_seed)
     bins = binpacking.to_constant_bin_number(stars_and_times, N_WORKERS)  # n_workers is the number of bins
 
     if DEBUG:
@@ -144,47 +153,12 @@ def __assign_partitions(rdds: list[Rdd], strategy: PartitionStrategy) -> list[Rd
     if strategy == 'binpacking':
         return __binpacking_strategy(rdds)
     if strategy == 'n_stars':
-        # Sepa
+        # Separates the RDDs in N_STARS groups
         len_rdds = len(rdds)
         return [Rdd(i * N_WORKERS // len(rdds), rdds[i].subset) for i in range(len_rdds)]
 
 
-def main():
-    rdds: list[Rdd] = []
-    for i in range(N_STARS):
-        random_features_to_select = get_random_subset_of_features(N_FEATURES)
-        rdd = Rdd(i, random_features_to_select)
-        rdds.append(rdd)
-
-    if DEBUG:
-        print('rdds before assign partitions')
-        print(rdds)
-
-    # Assigns the partition to each RDD
-    rdds = __assign_partitions(rdds, STRATEGY)
-
-    if DEBUG:
-        print('rdds after assign partitions')
-        print(rdds)
-
-    # Generates partition to worker dict
-    partition_to_worker: PartitionToWorker = {partition_id: f'worker_{partition_id}' for partition_id in
-                                              range(N_WORKERS)}
-
-    # Executes the simulation
-    worker_execution_times, worker_idle_times = collect(rdds, partition_to_worker)
-
-    if DEBUG:
-        print(f'worker_execution_times: {worker_execution_times}')
-        print(f'idle_times: {worker_idle_times}')
-
-    # Plots the execution times in bar chart for each worker
-    __plot_bars('Execution', worker_execution_times)
-    __plot_bars('Idle', worker_idle_times)
-    plt.show()
-
-
-def __plot_bars(title: Literal['Execution', 'Idle'], times: dict[str, list[float]]):
+def __plot_bars(title: str, data_type: Literal['Execution', 'Idle'], times: dict[str, list[float]]):
     """Plots the execution/idle times in bar chart for each worker."""
     values = [np.sum(values) for values in times.values()]
     fig, ax = plt.subplots()
@@ -197,7 +171,45 @@ def __plot_bars(title: Literal['Execution', 'Idle'], times: dict[str, list[float
     for index, value in enumerate(values):
         plt.text(index, value, str(round(value, 2)), ha='center', va='bottom')
 
-    plt.legend()
+
+def main():
+    rdds: list[Rdd] = []
+    for iteration in range(ITERATIONS):
+        print(f'Iteration {iteration}')
+        print('====================================')
+        for i in range(N_STARS):
+            random_seed = (RANDOM_SEED + i) * (iteration + 1) if RANDOM_SEED is not None else None
+            print(random_seed)
+            random_features_to_select = get_random_subset_of_features(N_FEATURES, random_state=random_seed)
+            rdd = Rdd(i, random_features_to_select)
+            rdds.append(rdd)
+
+        if DEBUG:
+            print('rdds before assign partitions')
+            print(rdds)
+
+        # Assigns the partition to each RDD
+        rdds = __assign_partitions(rdds, STRATEGY)
+
+        if DEBUG:
+            print('rdds after assign partitions')
+            print(rdds)
+
+        # Generates partition to worker dict
+        partition_to_worker: PartitionToWorker = {partition_id: f'worker_{partition_id}' for partition_id in
+                                                  range(N_WORKERS)}
+
+        # Executes the simulation
+        worker_execution_times, worker_idle_times = collect(rdds, partition_to_worker)
+
+        if DEBUG:
+            print(f'worker_execution_times: {worker_execution_times}')
+            print(f'idle_times: {worker_idle_times}')
+
+        # Plots the execution times in bar chart for each worker
+        __plot_bars(f'Execution (iteration {iteration})', 'Execution', worker_execution_times)
+        __plot_bars(f'Idle (iteration {iteration})', 'Idle', worker_idle_times)
+    plt.show()
 
 
 if __name__ == '__main__':
