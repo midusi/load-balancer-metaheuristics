@@ -9,6 +9,10 @@ import matplotlib.pyplot as plt
 # Dict with the partition identifier as key and the worker identifier on which the partition will be computed as value
 PartitionToWorker = dict[int, str]
 
+# Dict with the worker identifier as key and some delay to apply in every execution. For example, 'worker_0': 1.75
+# will generate a delay of 75% in the worker_0 execution time for every RDD.
+DelayForWorker = dict[str, float | None]
+
 # Dict with the worker identifier as key and the list of execution times as value
 WorkerTimes = dict[str, list[float]]
 
@@ -20,16 +24,19 @@ WorkerBarTimes = dict[str, list[list[float]]]
 PartitionStrategy = Literal['n_stars', 'binpacking', 'smart']
 
 # Strategy to define partitions
-STRATEGY: Final[PartitionStrategy] = 'n_stars'
+STRATEGY: Final[PartitionStrategy] = 'binpacking'
 
 # Seed for reproducibility
 RANDOM_SEED: Final[Optional[int]] = 12
+
+# If true, adds a delay to worker number 2
+ADD_DELAY_TO_WORKER_2: Final[bool] = False
 
 # Some constants
 N_WORKERS: Final = 3
 N_STARS: Final = 6
 N_FEATURES: Final = 5
-ITERATIONS: Final = 2
+ITERATIONS: Final = 3
 
 # To print useful information
 DEBUG: Final = True
@@ -51,12 +58,14 @@ class Rdd:
         return f"Rdd(partition={self.partition}, n_features={np.count_nonzero(self.subset)})"
 
 
-def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker) -> tuple[WorkerTimes, WorkerTimes]:
+def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker,
+            delay_for_worker: Optional[DelayForWorker]) -> tuple[WorkerTimes, WorkerTimes]:
     """
     Simulates the collect() method of Spark.
     :param rdds: List of RDD to evaluate.
     :param partition_to_worker: Dict with the partition identifier as key and the worker identifier on which the
     partition will be computed as value.
+    :param delay_for_worker: Dict with the worker identifier as key and some delay to apply in every execution.
     """
     worker_execution_times: WorkerTimes = {}
 
@@ -68,6 +77,13 @@ def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker) -> tuple[Wo
         worker_end = time.time()
 
         worker_execution_time = worker_end - worker_start
+
+        if delay_for_worker is not None and worker_id in delay_for_worker:
+            if DEBUG:
+                print(f'Worker {worker_id} has a delay of {delay_for_worker[worker_id]}')
+                print(f'Original execution time: {worker_execution_time} | New execution time: '
+                      f'{worker_execution_time * delay_for_worker[worker_id]}')
+            worker_execution_time *= delay_for_worker[worker_id]
 
         # Stores the execution time of the worker
         if worker_id in worker_execution_times:
@@ -198,7 +214,10 @@ def generate_bar_charts(data: WorkerBarTimes, title: str, data_type: Literal['Ex
     # Sets 10 as max value for y axis
     plt.ylim(0, 10)
     plt.xticks(iterations)
-    plt.legend()
+
+    # Gets labels and shows them sorted
+    _handles, labels = plt.gca().get_legend_handles_labels()
+    plt.legend(sorted(labels))
 
 
 def main():
@@ -211,7 +230,6 @@ def main():
         print('====================================')
         for i in range(N_STARS):
             random_seed = (RANDOM_SEED + i) * (iteration + 1) if RANDOM_SEED is not None else None
-            print(random_seed)
             random_features_to_select = get_random_subset_of_features(N_FEATURES, random_state=random_seed)
             rdd = Rdd(i, random_features_to_select)
             rdds.append(rdd)
@@ -231,8 +249,14 @@ def main():
         partition_to_worker: PartitionToWorker = {partition_id: f'worker_{partition_id}' for partition_id in
                                                   range(N_WORKERS)}
 
+        # Generates a dict with the worker identifier as key and the delay to apply in every execution as value
+        if ADD_DELAY_TO_WORKER_2:
+            delay_for_worker: Optional[DelayForWorker] = {
+                'worker_2': 1.75,
+            }
+
         # Executes the simulation
-        current_execution_times, current_idle_times = collect(rdds, partition_to_worker)
+        current_execution_times, current_idle_times = collect(rdds, partition_to_worker, delay_for_worker)
 
         if DEBUG:
             print(f'worker_execution_times: {current_execution_times}')
