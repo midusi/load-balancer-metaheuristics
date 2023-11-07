@@ -12,6 +12,10 @@ PartitionToWorker = dict[int, str]
 # Dict with the worker identifier as key and the list of execution times as value
 WorkerTimes = dict[str, list[float]]
 
+# Idle/Execution times structure for bar charts. Keys are workers, values is a List of lists with the iteration number
+# and the time.
+WorkerBarTimes = dict[str, list[list[float]]]
+
 # Types of strategy to define partitions
 PartitionStrategy = Literal['n_stars', 'binpacking', 'smart']
 
@@ -47,7 +51,7 @@ class Rdd:
         return f"Rdd(partition={self.partition}, n_features={np.count_nonzero(self.subset)})"
 
 
-def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker):
+def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker) -> tuple[WorkerTimes, WorkerTimes]:
     """
     Simulates the collect() method of Spark.
     :param rdds: List of RDD to evaluate.
@@ -158,22 +162,50 @@ def __assign_partitions(rdds: list[Rdd], strategy: PartitionStrategy) -> list[Rd
         return [Rdd(i * N_WORKERS // len(rdds), rdds[i].subset) for i in range(len_rdds)]
 
 
-def __plot_bars(title: str, data_type: Literal['Execution', 'Idle'], times: dict[str, list[float]]):
-    """Plots the execution/idle times in bar chart for each worker."""
-    values = [np.sum(values) for values in times.values()]
-    fig, ax = plt.subplots()
-    plt.bar(times.keys(), values)
-    ax.set_title(f'{title} times for each worker')
-    ax.set_xlabel('Worker')
-    ax.set_ylabel('Execution time (s)')
+def __add_to_worker_dict(current_execution_times: WorkerTimes, time_worker: WorkerBarTimes, iteration: int):
+    """Adds the execution/idle times of the current iteration to the dict with the execution/idle times per worker."""
+    for worker_id in current_execution_times:
+        if worker_id in time_worker:
+            time_worker[worker_id].append([iteration, np.sum(current_execution_times[worker_id])])
+        else:
+            time_worker[worker_id] = [[iteration, np.sum(current_execution_times[worker_id])]]
 
-    # Shows value on top of each bar
-    for index, value in enumerate(values):
-        plt.text(index, value, str(round(value, 2)), ha='center', va='bottom')
+
+def generate_bar_charts(data: WorkerBarTimes, title: str, data_type: Literal['Execution', 'Idle']):
+    """
+    Plots a bar chart
+    :param data: Dictionary with the worker name and the number of id
+    :param title: Title to show in the bar chart
+    :param data_type: To show 'Idle' or 'Execution' in bar chart title.
+    """
+    _fig, ax = plt.subplots()
+
+    # Adds some text for labels, title and axes ticks
+    ax.set_ylabel(f'{data_type} time (seconds)')
+    fig_title = f'{data_type} time per worker. {title}'
+    ax.set_title(fig_title)
+
+    width = 0.25
+    iterations: np.ndarray = np.array([])  # Just to prevent MyPy warning
+    for idx, worker in enumerate(data.keys()):
+        np_array = np.array(data[worker])
+        iterations = np_array[:, 0] + 1  # +1 to start from 1 instead of 0
+        data_times_per_iteration = np_array[:, 1]
+        # print(f'Worker {worker} | {data_type} times: {data_times_per_iteration}')
+        margin = width * idx
+        plt.bar(iterations + margin, data_times_per_iteration, width=width, label=worker)
+
+    # Sets 10 as max value for y axis
+    plt.ylim(0, 10)
+    plt.xticks(iterations)
+    plt.legend()
 
 
 def main():
     rdds: list[Rdd] = []
+    execution_times_worker: WorkerBarTimes = {}
+    idle_times_worker: WorkerBarTimes = {}
+
     for iteration in range(ITERATIONS):
         print(f'Iteration {iteration}')
         print('====================================')
@@ -200,15 +232,18 @@ def main():
                                                   range(N_WORKERS)}
 
         # Executes the simulation
-        worker_execution_times, worker_idle_times = collect(rdds, partition_to_worker)
+        current_execution_times, current_idle_times = collect(rdds, partition_to_worker)
 
         if DEBUG:
-            print(f'worker_execution_times: {worker_execution_times}')
-            print(f'idle_times: {worker_idle_times}')
+            print(f'worker_execution_times: {current_execution_times}')
+            print(f'idle_times: {current_idle_times}')
 
-        # Plots the execution times in bar chart for each worker
-        __plot_bars(f'Execution (iteration {iteration})', 'Execution', worker_execution_times)
-        __plot_bars(f'Idle (iteration {iteration})', 'Idle', worker_idle_times)
+        # Adds the data to execution and idle times
+        __add_to_worker_dict(current_execution_times, execution_times_worker, iteration)
+        __add_to_worker_dict(current_idle_times, idle_times_worker, iteration)
+
+    generate_bar_charts(execution_times_worker, f'Strategy = {STRATEGY}', 'Execution')
+    generate_bar_charts(idle_times_worker, f'Strategy = {STRATEGY}', 'Idle')
     plt.show()
 
 
