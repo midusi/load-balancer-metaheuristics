@@ -15,6 +15,7 @@ optimizer: OptimizerName = 'avltree'
 kernel: KernelName = 'linear'
 number_of_samples = 501  # Random number
 
+
 def __generate_stars_and_partitions_bins(bins: List) -> Dict[int, int]:
     """
     Generates a dict with the idx of the star and the assigned partition
@@ -26,6 +27,7 @@ def __generate_stars_and_partitions_bins(bins: List) -> Dict[int, int]:
         for star_idx in aux_bin.keys():
             stars_and_partitions[star_idx] = partition_id
     return stars_and_partitions
+
 
 def predict_execution_times(stars: np.ndarray) -> List:
     """
@@ -63,7 +65,7 @@ def main():
         stars_subsets[i] = (i, random_features_to_select)  # Initializes 'Population' with a key for partitionBy()
 
     predicted_times = predict_execution_times(stars_subsets)
-    stars_and_times = {k:v for (k, v) in zip(range(n_stars), predicted_times)}
+    stars_and_times = {k: v for (k, v) in zip(range(n_stars), predicted_times)}
     bins = binpacking.to_constant_bin_number(stars_and_times, n_workers)  # n_workers is the number of bins
     print("Stars (keys) and their predicted execution times (values):")
     print(stars_and_times)
