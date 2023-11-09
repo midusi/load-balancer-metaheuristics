@@ -13,13 +13,14 @@ N_WORKERS: Final = 3
 
 
 def __print_all(profits, weights, capacities):
-    print(f'Profits: {profits}')
+    # print(f'Profits: {profits}')
     print(f'Weights: {weights}')
     print(f'Weights sum: {sum(weights)}')
     print(f'Capacities: {capacities}')
 
 
-worker_to_delay: Optional[int] = None
+# WORKER_TO_DELAY: Final[Optional[int]] = None
+WORKER_TO_DELAY: Final[Optional[int]] = 1
 
 
 def main():
@@ -46,21 +47,33 @@ def main():
 
             capacities = [weight_per_worker for _ in range(N_WORKERS)]
 
-            if worker_to_delay is not None:
-                delay = random.randint(0, 1)
-                for idx in range(len(capacities)):
-                    if idx == worker_to_delay:
-                        capacities[idx] -= capacities[idx] * delay
+            print('Before applying delay:')
+            __print_all(tasks, weights, capacities)
+
+            if WORKER_TO_DELAY is not None:
+                delay_for_worker = random.uniform(0, 1)
+                delay_for_the_rest = delay_for_worker / (N_WORKERS - 1)
+
+                print(f'Updating capacities for a delay of {round(delay_for_worker * 100, 2)}%...')
+                for idx in range(N_WORKERS):
+                    old_capacity = capacities[idx]
+                    if idx == WORKER_TO_DELAY:
+                        capacities[idx] -= capacities[idx] * delay_for_worker
                     else:
                         # The other workers will have more capacity
-                        capacities[idx] += capacities[idx] * delay // (N_WORKERS - 1)
+                        capacities[idx] += capacities[idx] * delay_for_the_rest
+
+                    capacities[idx] = ceil(capacities[idx])
+                    print(
+                        f'Worker {idx + 1}: {old_capacity} -> {capacities[idx]}. Incremented/Decremented in a {delay_for_the_rest * 100}%')
 
             __print_all(tasks, weights, capacities)
 
             # Assign items into the knapsacks while maximizing profits
+            # NOTE: check_inputs=0 is used to avoid checking the inputs in the Fortran code and raise an error
+            # when the number of task is less than the number of workers
             start = time.time()
             res = solve_multiple_knapsack(tasks, weights, capacities, method='mthm', method_kwargs={'check_inputs': 0})
-            # res = solve_multiple_knapsack(tasks, weights, capacities, method='mtm')
             end = time.time()
             print(f'solve_multiple_knapsack() elapsed time: {end - start}')
 
@@ -79,9 +92,8 @@ def main():
             if len(tasks) > 0:
                 print(f'Backlog: {len(tasks)}')
 
-        print(worker_tasks_weights)
         sums = {k: sum(values) for k, values in worker_tasks_weights.items()}
-        print(sums)
+        print(f'Worker tasks weights: {sums}')
         print('=======================================')
 
 
