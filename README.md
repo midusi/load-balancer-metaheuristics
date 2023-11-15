@@ -98,7 +98,7 @@ El archivo `generate_full_train_file.py` contiene un script para recorrer todos 
 
 En el archivo `plot_experiments.py` está el código que toma los datos en JSON de los experimentos lanzados desde `main.py` para realizar comparaciones entre los datos de diferentes experimentos (con y sin load balancer, por ejemplo).
 
-En el archivo `bin_packing.py` se encuentra un ejemplo de prueba de como funciona el algoritmo Binpacking para la distribución equitativa entre workers de Spark considerando un supuesto tiempo de ejecución.
+En el archivo `bin_packing.py` se encuentra un ejemplo de prueba de como funciona el algoritmo Binpacking para la distribución equitativa entre workers de Spark considerando un supuesto tiempo de ejecución. Y en `binpacking_with_load_balancing.py` se realiza una prueba de concepto aplicando el algoritmo multiple knapsack para distribuir equitativamente la carga de trabajo entre diferentes workers aplicando delays aleatorios durente las diferentes iteraciones.
 
 En el archivo `simulator.py` se encuentra el desarrollo del simulador de balanceo de carga de Spark: simula la delegación de las particiones a un nodo específico para poder demostrar las ventajas de la carrera de doctorado.
 
