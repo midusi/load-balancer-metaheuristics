@@ -353,6 +353,7 @@ def generate_bar_charts(data: WorkerBarTimes, title: str, data_type: Literal['Ex
 
     width = 0.25
     iterations: np.ndarray = np.array([])  # Just to prevent MyPy warning
+    max_y_value = -1
     for idx, worker in enumerate(data.keys()):
         np_array = np.array(data[worker])
         iterations = np_array[:, 0] + 1  # +1 to start from 1 instead of 0
@@ -361,8 +362,11 @@ def generate_bar_charts(data: WorkerBarTimes, title: str, data_type: Literal['Ex
         margin = width * idx
         plt.bar(iterations + margin, data_times_per_iteration, width=width, label=worker)
 
+        # Updates max_y_value
+        max_y_value = max(max_y_value, np.max(data_times_per_iteration))
+
     # Sets 10 as max value for y axis
-    plt.ylim(0, 10)
+    plt.ylim(0, max(10, max_y_value) + 2)
     plt.xticks(iterations)
 
     # Gets labels and shows them sorted
