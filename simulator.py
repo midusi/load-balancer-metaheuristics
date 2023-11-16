@@ -36,14 +36,16 @@ STRATEGY: Final[PartitionStrategy] = 'smart'
 RANDOM_SEED: Final[Optional[int]] = 12
 
 # If true, adds a delay to worker number 2
-ADD_DELAY_TO_WORKER_2: Final[bool] = False
+ADD_DELAY_TO_WORKER_2: Final[bool] = True
 
 # Some constants
 N_WORKERS: Final = 3
 N_STARS: Final = 6
-N_FEATURES: Final = 5
-ITERATIONS: Final = 10
-# ITERATIONS: Final = 1
+N_FEATURES: Final = 90
+ITERATIONS: Final = 3
+
+# Factor to divide the time of execution (to make experiments faster)
+FACTOR: Final[int] = 9
 
 # To print useful information
 DEBUG: Final = True
@@ -62,10 +64,12 @@ class Rdd:
     """
     partition: int
     subset: np.ndarray
+    prediction: Optional[float]
 
     def __init__(self, partition: int, subset: np.ndarray):
         self.partition = partition
         self.subset = subset
+        self.prediction = None
 
     def __repr__(self):
         return f"Rdd(partition={self.partition}, n_features={np.count_nonzero(self.subset)})"
@@ -81,6 +85,7 @@ def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker,
     :param delay_for_worker: Dict with the worker identifier as key and some delay to apply in every execution.
     """
     worker_execution_times: WorkerTimes = {}
+    worker_predicted_times: WorkerTimes = {}
 
     for rdd in rdds:
         worker_id = partition_to_worker[rdd.partition]
@@ -96,43 +101,45 @@ def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker,
                 print(f'Worker {worker_id} has a delay of {delay_for_worker[worker_id]}')
                 print(f'Original execution time: {worker_execution_time} | New execution time: '
                       f'{worker_execution_time * delay_for_worker[worker_id]}')
-            worker_execution_time += worker_execution_time * delay_for_worker[worker_id]
+            worker_execution_time *= delay_for_worker[worker_id]
 
         # Stores the execution time of the worker
         if worker_id in worker_execution_times:
             worker_execution_times[worker_id].append(worker_execution_time)
+            worker_predicted_times[worker_id].append(rdd.prediction)
         else:
             worker_execution_times[worker_id] = [worker_execution_time]
+            worker_predicted_times[worker_id] = [rdd.prediction]
 
     # Gets max sum of execution times
-    max_worker_time = -1
+    max_worker_time = -1  # Slowest
     for worker_id in worker_execution_times:
         sum_worker_time = np.sum(worker_execution_times[worker_id])
+        sum_worker_time_predicted = np.sum(worker_predicted_times[worker_id])
 
         if DEBUG:
             print(f'Worker {worker_id} has executed {len(worker_execution_times[worker_id])} RDDs in '
-                  f'{sum_worker_time} seconds')
+                  f'{round(sum_worker_time, 3)} seconds (predicted {round(sum_worker_time_predicted, 3)})')
 
+        # Updates min/max
         if sum_worker_time > max_worker_time:
             max_worker_time = sum_worker_time
 
     # Stores the idle time for every worker. This is the difference between the max worker time and the sum
     # of the execution times of the worker
     idle_times: WorkerIdleTime = {}
-    max_idle_time = -1
-    for worker_id in worker_execution_times:
-        idle_time = max_worker_time - np.sum(worker_execution_times[worker_id])
-        idle_times[worker_id] = idle_time
 
-        if idle_time > max_idle_time:
-            max_idle_time = idle_time
-
-    # Adds the percentage of delay for every worker. The worker with the highest idle time will have a delay of 0%,
-    # and the rest of workers will have a delay proportional to their idle time.
-    # TODO: fix this
     delay_percentage: DelayForWorker = {}
     for worker_id in worker_execution_times:
-        delay_percentage[worker_id] = (max_idle_time - idle_times[worker_id]) / max_idle_time
+        worker_sum_time = np.sum(worker_execution_times[worker_id])
+        sum_predictions = np.sum(worker_predicted_times[worker_id])
+
+        idle_time = max_worker_time - worker_sum_time
+        idle_times[worker_id] = idle_time
+
+        # The delay is the percentage of the execution time of the worker (predicted execution time / execution time).
+        # This is useful as we are punishing/rewarding the workers depending on how accurate was the prediction.
+        delay_percentage[worker_id] = sum_predictions / worker_sum_time
 
     return worker_execution_times, idle_times, delay_percentage
 
@@ -140,7 +147,7 @@ def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker,
 def __fitness_function(subset: np.ndarray) -> int:
     """Simulates a fitness function. It will return the number of features in the subset, and it'll last the same amount
     of time as the number of features in the subset."""
-    time.sleep(np.count_nonzero(subset) / 9)
+    time.sleep(np.count_nonzero(subset) / FACTOR)
     return len(subset)
 
 
@@ -149,7 +156,7 @@ def __predict(subset: np.ndarray, random_seed: Optional[int]) -> float:
     if random_seed is not None:
         np.random.seed(random_seed)
 
-    return np.count_nonzero(subset) + np.random.uniform(-1, 1)
+    return (np.count_nonzero(subset) + np.random.uniform(-1, 1)) / FACTOR
 
 
 def __generate_stars_and_partitions_bins(bins: list) -> dict[int, int]:
@@ -172,6 +179,8 @@ def __binpacking_strategy(rdds: list[Rdd]) -> list[Rdd]:
     for (idx, rdd) in enumerate(res_rdd):
         random_seed = RANDOM_SEED + idx if RANDOM_SEED is not None else None
         stars_and_times[idx] = __predict(rdd.subset, random_seed)
+        rdd.prediction = stars_and_times[idx]
+
     bins = binpacking.to_constant_bin_number(stars_and_times, N_WORKERS)  # n_workers is the number of bins
 
     if DEBUG:
@@ -213,6 +222,8 @@ def __smart_strategy(rdds: list[Rdd], workers_delay: dict[str, float]) -> list[R
     for (idx, rdd) in enumerate(res_rdd):
         random_seed = RANDOM_SEED + idx if RANDOM_SEED is not None else None
         prediction = __predict(rdd.subset, random_seed)
+        rdd.prediction = prediction
+
         weights.append(ceil(prediction))
 
     while len(tasks) > 0:
@@ -228,30 +239,17 @@ def __smart_strategy(rdds: list[Rdd], workers_delay: dict[str, float]) -> list[R
             __print_all_knapsack(weights, capacities)
 
         if workers_delay is not None:
-            extra_capacity_for_best_worker = 0  # Sum of the extra capacity for the best worker
-            idx_worker_without_delay = None
             for idx in range(N_WORKERS):
                 old_capacity = capacities[idx]
                 worker_id = __get_worker_id(idx)
-                if workers_delay[worker_id] != 0.0:
-                    delay_for_worker = workers_delay[worker_id]
-                    extra_capacity_for_best_worker += delay_for_worker
-
-                    capacities[idx] -= capacities[idx] * delay_for_worker
-                    if DEBUG:
-                        print(f'Worker {idx}: {old_capacity} -> {capacities[idx]}. Decremented in a '
-                              f'~{round(delay_for_worker * 100, 2)}%')
-                else:
-                    if DEBUG:
-                        print(f'Worker {idx} has no delay')
-                    idx_worker_without_delay = idx
-
+                delay_for_worker = workers_delay[worker_id]
+                capacities[idx] *= delay_for_worker
                 capacities[idx] = ceil(capacities[idx])
 
-            # The fastest worker will have more capacity
-            capacities[idx_worker_without_delay] += (capacities[idx_worker_without_delay] *
-                                                     extra_capacity_for_best_worker)
-            capacities[idx_worker_without_delay] = ceil(capacities[idx_worker_without_delay])
+                if DEBUG:
+                    diff = round((old_capacity - capacities[idx]) / old_capacity * 100, 2)
+                    print(f'Worker {idx}: {old_capacity} -> {capacities[idx]}. Decremented/Incremented in a '
+                          f'~{abs(diff)}% | Applied {delay_for_worker}')
 
             if DEBUG:
                 print('After applying delay:')
@@ -378,7 +376,6 @@ def __get_worker_id(worker_id: int) -> str:
 
 
 def main():
-    rdds: list[Rdd] = []
     execution_times_worker: WorkerBarTimes = {}
     idle_times_worker: WorkerBarTimes = {}
 
@@ -387,6 +384,8 @@ def main():
     for iteration in range(ITERATIONS):
         print(f'Iteration {iteration + 1}')
         print('====================================')
+
+        rdds: list[Rdd] = []
 
         for i in range(N_STARS):
             random_seed = (RANDOM_SEED + i) * (iteration + 1) if RANDOM_SEED is not None else None
@@ -408,7 +407,7 @@ def main():
         # Generates a dict with the worker identifier as key and the delay to apply in every execution as value
         if ADD_DELAY_TO_WORKER_2:
             delay_for_worker: Optional[DelayForWorker] = {
-                __get_worker_id(2): 0.75,
+                __get_worker_id(2): 1.75,
             }
         else:
             delay_for_worker = None
