@@ -3,14 +3,14 @@ import matplotlib.pyplot as plt
 import json
 import os
 from typing import List, Dict, Literal, cast, Tuple, Optional
+import pandas as pd
 from sklearn.metrics import mean_squared_error
 
-
 ModelKey = Literal['best_gradient_booster_model', 'best_gradient_booster_model_no_min_max', 'best_linear_model_3',
-                     'best_linear_model_3_no_min_max', 'best_nn_model', 'best_nn_model_no_min_max']
+'best_linear_model_3_no_min_max', 'best_nn_model', 'best_nn_model_no_min_max']
 
 # RESULTS_FOLDER_PATH = './Results'
-RESULTS_FOLDER_PATH = './paper_load_balancing'
+RESULTS_FOLDER_PATH = 'paper_load_balancing'
 
 # Idle/Execution times structure for bar charts. Keys are workers, values is a List of lists with the iteration number
 # and the time.
@@ -22,26 +22,54 @@ DataType = Literal['Idle', 'Execution']
 NUMBER_OF_STARS = 60
 
 # Folder name to save the images (this will be inside the RESULTS_FOLDER_PATH folder)
-SAVE_FOLDER_NAME = 'images'
+SAVE_FOLDER_IMGS_NAME = 'images'
 
-# If True, saves the images in the RESULTS_FOLDER_PATH/SAVE_FOLDER_NAME folder
-# SAVE_IMGS = False
-SAVE_IMGS = True
+# If True, saves the images in the RESULTS_FOLDER_PATH/SAVE_FOLDER_IMGS_NAME folder
+SAVE_IMGS = False
+# SAVE_IMGS = True
+
+# Folder name to save the images (this will be inside the RESULTS_FOLDER_PATH folder)
+SAVE_FOLDER_CSV_NAME = 'csvs'
+
+# If True, saves the CSV files in the RESULTS_FOLDER_PATH/SAVE_FOLDER_CSV_NAME folder
+SAVE_CSV_FILES = True
 
 # If True, shows the images
 # PLOT_IMAGES = True
 PLOT_IMAGES = False
 
+
 def __save_img(title: str):
     """
-    Saves the current img in the RESULTS_FOLDER_PATH/SAVE_FOLDER_NAME folder (if SAVE_IMGS is True).
+    Saves the current img in the RESULTS_FOLDER_PATH/SAVE_FOLDER_IMGS_NAME folder (if SAVE_IMGS is True).
     :param title: Title of the image
     """
     if SAVE_IMGS:
-        save_path = os.path.join(RESULTS_FOLDER_PATH, SAVE_FOLDER_NAME)
+        save_path = os.path.join(RESULTS_FOLDER_PATH, SAVE_FOLDER_IMGS_NAME)
         if not os.path.exists(save_path):
             os.makedirs(save_path)
-        plt.savefig(os.path.join(save_path, f'{title}.png'))
+
+        # Replaces the \n with _
+        # fig_path = os.path.join(save_path, f'{title}').replace('\n', '_').replace('.', '_').replace(' ', '_')[:90].strip()
+        fig_path = os.path.join(save_path, f'{title}').replace('\n', '_')[:90].strip()
+        print(f'"{fig_path}.png"')
+        plt.savefig(fig_path + '.png')
+
+
+def __save_csv(csv_data: dict, title: str):
+    """
+    Saves the CSV data in the RESULTS_FOLDER_PATH/SAVE_FOLDER_CSV_NAME folder (if SAVE_CSV_FILES is True).
+    :param title: Title of the image
+    """
+    if SAVE_CSV_FILES:
+        save_path = os.path.join(RESULTS_FOLDER_PATH, SAVE_FOLDER_CSV_NAME)
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
+
+        # Replaces the \n with _
+        fig_path = os.path.join(save_path, f'{title}').replace('\n', '_')[:90].strip()
+        df = pd.DataFrame(csv_data)
+        df.to_csv(fig_path + '.csv', index=False)
 
 
 def generate_bar_charts(data: WorkerBarTimes, title: str, data_type: DataType):
@@ -55,8 +83,19 @@ def generate_bar_charts(data: WorkerBarTimes, title: str, data_type: DataType):
 
     # Adds some text for labels, title and axes ticks
     ax.set_ylabel(f'{data_type} time (seconds)')
-    fig_title = f'{data_type} time per worker. {title}'
+    fig_title = f'{data_type[:4]} {title}'   # Makes the title shorter
     ax.set_title(fig_title)
+
+    # In case SAVE_CSV_FILES is True, creates a dict with the data to save it in a CSV file
+    if SAVE_CSV_FILES:
+        csv_data: Dict[str, List[float]] = {
+            'Iteration': [],
+            'Worker': [],
+            'Time': []
+        }
+    else:
+        csv_data = None
+
 
     width = 0.25
     iterations: np.ndarray = np.array([])  # Just to prevent MyPy warning
@@ -68,10 +107,17 @@ def generate_bar_charts(data: WorkerBarTimes, title: str, data_type: DataType):
         margin = width * idx
         plt.bar(iterations + margin, data_times_per_iteration, width=width, label=worker)
 
+        if SAVE_CSV_FILES:
+            csv_data['Iteration'].extend(iterations)
+            csv_data['Worker'].extend([worker] * len(iterations))
+            csv_data['Time'].extend(data_times_per_iteration)
+
     plt.xticks(iterations)
     plt.legend()
 
+    # Saves images and CSV files
     __save_img(fig_title)
+    __save_csv(csv_data, fig_title)
 
 
 def generate_predictions_line_charts(n_features: List[float], execution_times: List[float],
@@ -128,8 +174,10 @@ def generate_predictions_line_charts(n_features: List[float], execution_times: L
         predicted_std_errors.append(std_error)
 
     # Plots execution and predicted times
-    ax.errorbar(unique_n_features, execution_means, yerr=execution_std_errors, capsize=4, label='Execution time', marker='o', linewidth=2)
-    ax.errorbar(unique_n_features, predicted_means, yerr=predicted_std_errors, capsize=4, label='Predicted time', marker='o', linewidth=2)
+    ax.errorbar(unique_n_features, execution_means, yerr=execution_std_errors, capsize=4, label='Execution time',
+                marker='o', linewidth=2)
+    ax.errorbar(unique_n_features, predicted_means, yerr=predicted_std_errors, capsize=4, label='Predicted time',
+                marker='o', linewidth=2)
 
     plt.xlabel('Number of features')
     plt.ylabel(f'Time (seconds)')
@@ -138,6 +186,7 @@ def generate_predictions_line_charts(n_features: List[float], execution_times: L
     plt.title(f'Execution and predicted times. {title}')
 
     __save_img(fig_title)
+
 
 def get_mean_and_std(values: np.ndarray) -> Tuple[float, float]:
     """Gets mean and std of a list of floats"""
@@ -148,42 +197,6 @@ def get_mean_and_std(values: np.ndarray) -> Tuple[float, float]:
         std_error = 0.0
     return execution_mean, std_error
 
-
-def generate_line_charts(data: Dict[str, List[float]], title: str, data_type: DataType):
-    """
-    Plots a line chart with all the workers and their idle/execution times.
-    :param data: Dict with workers as keys and a list of Idle/Execution times as values.
-    :param title: Title to show as the chart's title.
-    :param data_type: 'Idle'/'Execution' to show in chart's title.
-    """
-    _fig, ax = plt.subplots()
-    for worker, values in data.items():
-        values_np = np.array(values)
-        unique_iterations = np.unique(values_np[:, 0])
-        means = []
-        std_errors = []
-
-        for it in unique_iterations:
-            idx_it = np.where(values_np[:, 0] == it)
-            times = values_np[idx_it][:, 1]
-
-            # Gets mean and error
-            mean = np.mean(times)
-            means.append(mean)
-            std_error = np.std(times, ddof=1) / np.sqrt(len(times))
-            std_errors.append(std_error)
-
-        # Plots idle/execution times for the current worker
-        iterations = unique_iterations + 1
-        ax.errorbar(iterations, means, yerr=std_errors, capsize=4, label=worker, marker='o', linewidth=2)
-
-    plt.xlabel('Iteration')
-    plt.ylabel(f'{data_type} time (seconds)')
-    plt.legend(loc='upper right')
-    fig_title = f'{data_type} time per worker. {title}'
-    plt.title(fig_title)
-
-    __save_img(fig_title)
 
 class Experiment:
     """Represent a Result of an experiment"""
@@ -200,8 +213,8 @@ class Experiment:
     is_sequential: bool
 
     def __init__(self, file_path: str, name: str, plot_predictions: bool, model_name_in_json: str = None,
-                 original_model_key: ModelKey = 'best_gradient_booster_model', n_stars = 90,
-                 only_consider_intersection: bool = False, is_sequential = False):
+                 original_model_key: ModelKey = 'best_gradient_booster_model', n_stars=90,
+                 only_consider_intersection: bool = False, is_sequential=False):
         self.dir_path = file_path
         self.name = name
         self.plot_predictions = plot_predictions
@@ -228,7 +241,7 @@ def __sum_data_by_iteration(original_dict: dict, current_dict: dict):
 
 def get_times_data(experiment: Experiment,
                    data_key: Literal['workers_idle_times_per_iteration', 'workers_execution_times_per_iteration',
-                      'predicted_execution_times']) -> WorkerBarTimes:
+                   'predicted_execution_times']) -> WorkerBarTimes:
     """
     Gets bar and line charts data
     :param experiment: Experiment instance
@@ -277,7 +290,6 @@ def get_times_data(experiment: Experiment,
             if bar_chart_data_aux is None:
                 # TODO: implement filter by in common iterations
                 bar_chart_data_aux = json_data
-                line_chart_data_aux = json_data
             else:
                 __sum_data_by_iteration(bar_chart_data_aux, json_data)
 
@@ -301,7 +313,8 @@ def get_times_data(experiment: Experiment,
         # Reports non intersection
         non_intersection = np.setdiff1d(all_iterations, intersection).astype(int)
         if len(non_intersection) > 0:
-            print(f'Experiment "{experiment.name}" has non intersection iterations: {", ".join(non_intersection.astype(str))}')
+            print(
+                f'Experiment "{experiment.name}" has non intersection iterations: {", ".join(non_intersection.astype(str))}')
 
         for worker, values in bar_chart_data_aux.items():
             bar_chart_data[worker] = []
@@ -360,9 +373,9 @@ def plot_charts(experiment: Experiment,
     else:
         data_type = 'Execution'
 
-    title = f'{experiment.name}\nOnly common iterations: {experiment.only_consider_intersection}'
+    common_it_str = ' (common iterations)' if experiment.only_consider_intersection else ''
+    title = f'{experiment.name}{common_it_str}'
     generate_bar_charts(bar_chart_data, title=title, data_type=data_type)
-    # generate_line_charts(bar_chart_data, title=title, data_type=data_type)  # FIXME: check if needed
 
     # If needed plots predictions times
     if is_plotting_idle_times and experiment.plot_predictions:
@@ -372,24 +385,24 @@ def plot_charts(experiment: Experiment,
 
 def main():
     experiments: List[Experiment] = [
-    #     Experiment('breast_with_load_balancer', 'Breast (with G.B. load balancer)', plot_predictions=True),
-    #     Experiment('breast_with_load_balancer', 'Breast (with G.B. load balancer)',
-    #                plot_predictions=True),
-    #     Experiment('lung_with_load_balancer', 'Lung (with G.B. load balancer)', plot_predictions=True),
-    #                model_name_in_json='/home/genaro/logs_30_ind_it_30_it_90_stars_lung_with_load_balancer.txt'),
-    #     Experiment('lung_with_load_balancer_better_gradient_booster', 'Lung (with G.B. load balancer and better model)',
-    #                plot_predictions=True, model_name_in_json='/home/genaro/logs_30_ind_it_30_it_90_stars_lung_with_load_balancer_try_2_with_better_gradient_booster_model.txt'),
-    #     Experiment('lung_with_nn_as_load_balancer', 'Lung (with NN load balancer and better model)',
-    #                plot_predictions=True), #, model_name_in_json='/home/genaro/logs_30_ind_it_30_it_90_stars_lung_with_load_balancer_try_3_with_nn_model.txt', original_model_key='best_nn_model'),
-    #     Experiment('lung_with_gb_as_load_balancer_trained_with_lung', 'Lung (with G.B. load balancer and better model trained with lung data)',
-    #                plot_predictions=True), #, model_name_in_json='/home/genaro/logs_30_ind_it_30_it_90_stars_lung_with_load_balancer_try_4_with_gb_model_trained_with_lung.txt'),
-    #     Experiment('lung_with_gb_as_load_balancer_trained_with_logs_fixed_predictions',
-    #                'Lung fixed predictions (with G.B. load balancer and better model trained with lung data)',
-    #                plot_predictions=True, only_consider_intersection=False), # model_name_in_json='/home/genaro/logs_30_ind_it_30_it_90_stars_lung_with_load_balancer_try_6_with_gb_model_trained_with_lung_more_fixed_predictions.txt')
+        #     Experiment('breast_with_load_balancer', 'Breast (with G.B. load balancer)', plot_predictions=True),
+        #     Experiment('breast_with_load_balancer', 'Breast (with G.B. load balancer)',
+        #                plot_predictions=True),
+        #     Experiment('lung_with_load_balancer', 'Lung (with G.B. load balancer)', plot_predictions=True),
+        #                model_name_in_json='/home/genaro/logs_30_ind_it_30_it_90_stars_lung_with_load_balancer.txt'),
+        #     Experiment('lung_with_load_balancer_better_gradient_booster', 'Lung (with G.B. LB and better model)',
+        #                plot_predictions=True, model_name_in_json='/home/genaro/logs_30_ind_it_30_it_90_stars_lung_with_load_balancer_try_2_with_better_gradient_booster_model.txt'),
+        #     Experiment('lung_with_nn_as_load_balancer', 'Lung (with NN LB and better model)',
+        #                plot_predictions=True), #, model_name_in_json='/home/genaro/logs_30_ind_it_30_it_90_stars_lung_with_load_balancer_try_3_with_nn_model.txt', original_model_key='best_nn_model'),
+        #     Experiment('lung_with_gb_as_load_balancer_trained_with_lung', 'Lung (with G.B. LB and better model trained with lung data)',
+        #                plot_predictions=True), #, model_name_in_json='/home/genaro/logs_30_ind_it_30_it_90_stars_lung_with_load_balancer_try_4_with_gb_model_trained_with_lung.txt'),
+        #     Experiment('lung_with_gb_as_load_balancer_trained_with_logs_fixed_predictions',
+        #                'Lung fixed predictions (with G.B. LB and better model trained with lung data)',
+        #                plot_predictions=True, only_consider_intersection=False), # model_name_in_json='/home/genaro/logs_30_ind_it_30_it_90_stars_lung_with_load_balancer_try_6_with_gb_model_trained_with_lung_more_fixed_predictions.txt')
 
         # AFTER FIXING PREDICTIONS
         # Experiment('breast_without_load_balancer', 'Breast (without load balancer)', plot_predictions=False, only_consider_intersection=True),
-        # Experiment('breast_with_load_balancer_fixed_predictions', 'Breast fixed predictions (G.B. load balancer first model\n Trained model "svm_first_attempt")',
+        # Experiment('breast_with_load_balancer_fixed_predictions', 'Breast fixed predictions (G.B. LB first model\n Trained model "svm_first_attempt")',
         #            plot_predictions=True, only_consider_intersection=True),
         # Experiment('lung_without_load_balancer', 'Lung (without load balancer)', plot_predictions=False, only_consider_intersection=True),
         # Experiment('lung_with_gb_as_load_balancer_trained_with_logs_fixed_predictions',
@@ -405,7 +418,6 @@ def main():
         #            only_consider_intersection=True),
         # Experiment('lung_with_load_balancer_2_workers_final', 'Lung 2 workers (with load balancer)', plot_predictions=True,
         #            only_consider_intersection=True),
-
 
         # WITH ONLY TWO WORKERS TIMES (FINAL)
         # Experiment('breast_without_load_balancer_2_workers_final_times', 'Breast 2 workers times (without load balancer)', plot_predictions=False,
@@ -425,30 +437,38 @@ def main():
 
         # Breast, Clustering, K-means, 2 clusters
         Experiment('clustering/breast/logs_breast_clustering_sequential_k_means_log_likelihood_2_clusters_1_core',
-                   'Breast Sequential K-means log-likelihood',
+                   'Breast Sequential K-means',
                    plot_predictions=False, only_consider_intersection=False, is_sequential=True),
-        Experiment('clustering/breast/logs_breast_clustering_n_stars_k_means_log_likelihood_2_clusters_1_core', 'Breast N-Stars K-means log-likelihood',
+        Experiment('clustering/breast/logs_breast_clustering_n_stars_k_means_log_likelihood_2_clusters_1_core',
+                   'Breast N-Stars K-means',
                    plot_predictions=False, only_consider_intersection=True),
-        Experiment('clustering/breast/logs_breast_clustering_binpacking_k_means_log_likelihood_2_clusters_1_core', 'Breast Load balancer (v1) K-means log-likelihood',
+        Experiment('clustering/breast/logs_breast_clustering_binpacking_k_means_log_likelihood_2_clusters_1_core',
+                   'Breast LB (v1) K-means',
                    plot_predictions=True, only_consider_intersection=True),
-        Experiment('clustering/breast/logs_breast_clustering_new_binpacking_model_k_means_log_likelihood_2_clusters_1_core',
-                   'Breast Load balancer (full) K-means log-likelihood',
+        Experiment('clustering/breast'
+                   '/logs_breast_clustering_new_binpacking_model_k_means_log_likelihood_2_clusters_1_core',
+                   'Breast LB (full) K-means',
                    plot_predictions=True, only_consider_intersection=True),
         Experiment(
             'clustering/breast/logs_breast_clustering_overfitting_binpacking_model_k_means_log_likelihood_2_clusters_1_core',
-            'Breast Load balancer (overfitting) K-means log-likelihood',
+            'Breast LB (overfitting) K-means',
             plot_predictions=True, only_consider_intersection=True),
 
         # Breast, SVM, Linear
         Experiment('svm/breast/logs_breast_svm_sequential_kernel_linear_regression_1_core_6g',
-                   'Breast Sequential SVM Linear',
+                   'Breast Sequential SVM Lin',
                    plot_predictions=False, only_consider_intersection=False, is_sequential=True),
-        Experiment('svm/breast/logs_breast_svm_n_stars_kernel_linear_regression_1_core', 'Breast N-Stars SVM Linear',
+        Experiment('svm/breast/logs_breast_svm_n_stars_kernel_linear_regression_1_core', 'Breast N-Stars SVM Lin',
                    plot_predictions=False, only_consider_intersection=True),
-        Experiment('svm/breast/logs_breast_svm_binpacking_kernel_linear_regression_1_core', 'Breast Load balancer (v1) SVM Linear (N_JOBS = -1)',
+        Experiment('svm/breast/logs_breast_svm_binpacking_kernel_linear_regression_1_core',
+                   'Breast LB (v1) SVM Lin',
                    plot_predictions=True, only_consider_intersection=True),
-        # TODO: add new_binpacking_model when finished in LIDI cluster
-        # TODO: add overfitting_binpacking_model when finished in LIDI cluster
+        Experiment('svm/breast/logs_breast_svm_new_binpacking_model_kernel_linear_regression_1_core',
+                   'Breast LB (full) SVM Lin',
+                   plot_predictions=True, only_consider_intersection=True),
+        Experiment('svm/breast/logs_breast_svm_overfitting_binpacking_model_kernel_linear_regression_1_core',
+                   'Breast LB (overfitting) SVM Lin',
+                   plot_predictions=True, only_consider_intersection=True),
 
         # Breast, SVM, Poly
         Experiment('svm/breast/logs_breast_svm_sequential_kernel_poly_regression_1_core_6g',
@@ -457,10 +477,14 @@ def main():
         Experiment('svm/breast/logs_breast_svm_n_stars_kernel_poly_regression_1_core', 'Breast N-Stars SVM Poly',
                    plot_predictions=False, only_consider_intersection=True),
         Experiment('svm/breast/logs_breast_svm_binpacking_kernel_poly_regression_1_core',
-                   'Breast Load balancer (v1) SVM Poly (N_JOBS = -1)',
+                   'Breast LB (v1) SVM Poly',
                    plot_predictions=True, only_consider_intersection=True),
-        # TODO: add new_binpacking_model when finished in LIDI cluster
-        # TODO: add overfitting_binpacking_model when finished in LIDI cluster
+        Experiment('svm/breast/logs_breast_svm_new_binpacking_model_kernel_poly_regression_1_core',
+                   'Breast LB (full) SVM Poly',
+                   plot_predictions=True, only_consider_intersection=True),
+        Experiment('svm/breast/logs_breast_svm_overfitting_binpacking_model_kernel_poly_regression_1_core',
+                   'Breast LB (overfitting) SVM Poly',
+                   plot_predictions=True, only_consider_intersection=True),
 
         # Breast, SVM, RBF
         Experiment('svm/breast/logs_breast_svm_sequential_kernel_rbf_regression_1_core_6g',
@@ -469,35 +493,49 @@ def main():
         Experiment('svm/breast/logs_breast_svm_n_stars_kernel_rbf_regression_1_core', 'Breast N-Stars SVM RBF',
                    plot_predictions=False, only_consider_intersection=True),
         Experiment('svm/breast/logs_breast_svm_binpacking_kernel_rbf_regression_1_core',
-                   'Breast Load balancer (v1) SVM RBF (N_JOBS = -1)',
+                   'Breast LB (v1) SVM RBF',
                    plot_predictions=True, only_consider_intersection=True),
-        # TODO: add new_binpacking_model when finished in LIDI cluster
-        # TODO: add overfitting_binpacking_model when finished in LIDI cluster
+        Experiment('svm/breast/logs_breast_svm_new_binpacking_model_kernel_rbf_regression_1_core',
+                   'Breast LB (full) SVM RBF',
+                   plot_predictions=True, only_consider_intersection=True),
+        Experiment('svm/breast/logs_breast_svm_overfitting_binpacking_model_kernel_rbf_regression_1_core',
+                   'Breast LB (overfitting) SVM RBF',
+                   plot_predictions=True, only_consider_intersection=True),
 
         # Kidney, Clustering, K-means, 2 clusters
         Experiment('clustering/kidney/logs_kidney_clustering_sequential_k_means_log_likelihood_2_clusters_1_core_6g',
-                   'Kidney Sequential K-means log-likelihood',
+                   'Kidney Sequential K-means',
                    plot_predictions=False, only_consider_intersection=False, is_sequential=True),
         Experiment('clustering/kidney/logs_kidney_clustering_n_stars_k_means_log_likelihood_2_clusters_1_core',
-                   'Kidney N-Stars K-means log-likelihood',
+                   'Kidney N-Stars K-means',
                    plot_predictions=False, only_consider_intersection=True),
         Experiment('clustering/kidney/logs_kidney_clustering_binpacking_k_means_log_likelihood_2_clusters_1_core',
-                   'Kidney Load balancer (v1) K-means log-likelihood',
+                   'Kidney LB (v1) K-means',
                    plot_predictions=True, only_consider_intersection=True),
-        # TODO: add new_binpacking_model when finished in LIDI cluster
-        # TODO: add overfitting_binpacking_model when finished in LIDI cluster
+        Experiment(
+            'clustering/kidney/logs_kidney_clustering_new_binpacking_model_k_means_log_likelihood_2_clusters_1_core',
+            'Kidney LB (full) K-means',
+            plot_predictions=True, only_consider_intersection=True),
+        Experiment(
+            'clustering/kidney/logs_kidney_clustering_overfitting_binpacking_model_k_means_log_likelihood_2_clusters_1_core',
+            'Kidney LB (overfitting) K-means',
+            plot_predictions=True, only_consider_intersection=True),
 
         # Kidney, SVM, Linear
         Experiment('svm/kidney/logs_kidney_svm_sequential_kernel_linear_regression_1_core_6g',
-                   'Kidney Sequential SVM Linear',
+                   'Kidney Sequential SVM Lin',
                    plot_predictions=False, only_consider_intersection=False, is_sequential=True),
-        Experiment('svm/kidney/logs_kidney_svm_n_stars_kernel_linear_regression_1_core', 'Kidney N-Stars SVM Linear',
+        Experiment('svm/kidney/logs_kidney_svm_n_stars_kernel_linear_regression_1_core', 'Kidney N-Stars SVM Lin',
                    plot_predictions=False, only_consider_intersection=True),
         Experiment('svm/kidney/logs_kidney_svm_binpacking_kernel_linear_regression_1_core',
-                   'Kidney Load balancer (v1) SVM Linear (N_JOBS = -1)',
+                   'Kidney LB (v1) SVM Lin',
                    plot_predictions=True, only_consider_intersection=True),
-        # TODO: add new_binpacking_model when finished in LIDI cluster
-        # TODO: add overfitting_binpacking_model when finished in LIDI cluster
+        Experiment('svm/kidney/logs_kidney_svm_new_binpacking_model_kernel_linear_regression_1_core',
+                   'Kidney LB (full) SVM Lin',
+                   plot_predictions=True, only_consider_intersection=True),
+        Experiment('svm/kidney/logs_kidney_svm_overfitting_binpacking_model_kernel_linear_regression_1_core',
+                   'Kidney LB (overfitting) SVM Lin',
+                   plot_predictions=True, only_consider_intersection=True),
 
         # Kidney, SVM, Poly
         Experiment('svm/kidney/logs_kidney_svm_sequential_kernel_poly_regression_1_core_6g',
@@ -506,10 +544,14 @@ def main():
         Experiment('svm/kidney/logs_kidney_svm_n_stars_kernel_poly_regression_1_core', 'Kidney N-Stars SVM Poly',
                    plot_predictions=False, only_consider_intersection=True),
         Experiment('svm/kidney/logs_kidney_svm_binpacking_kernel_poly_regression_1_core',
-                   'Kidney Load balancer (v1) SVM Poly (N_JOBS = -1)',
+                   'Kidney LB (v1) SVM Poly',
                    plot_predictions=True, only_consider_intersection=True),
-        # TODO: add new_binpacking_model when finished in LIDI cluster
-        # TODO: add overfitting_binpacking_model when finished in LIDI cluster
+        Experiment('svm/kidney/logs_kidney_svm_new_binpacking_model_kernel_poly_regression_1_core',
+                   'Kidney LB (full) SVM Poly',
+                   plot_predictions=True, only_consider_intersection=True),
+        Experiment('svm/kidney/logs_kidney_svm_overfitting_binpacking_model_kernel_poly_regression_1_core',
+                   'Kidney LB (overfitting) SVM Poly',
+                   plot_predictions=True, only_consider_intersection=True),
 
         # Kidney, SVM, RBF
         Experiment('svm/kidney/logs_kidney_svm_sequential_kernel_rbf_regression_1_core_6g',
@@ -518,10 +560,14 @@ def main():
         Experiment('svm/kidney/logs_kidney_svm_n_stars_kernel_rbf_regression_1_core', 'Kidney N-Stars SVM RBF',
                    plot_predictions=False, only_consider_intersection=True),
         Experiment('svm/kidney/logs_kidney_svm_binpacking_kernel_rbf_regression_1_core',
-                   'Kidney Load balancer (v1) SVM RBF (N_JOBS = -1)',
+                   'Kidney LB (v1) SVM RBF',
                    plot_predictions=True, only_consider_intersection=True),
-        # TODO: add new_binpacking_model when finished in LIDI cluster
-        # TODO: add overfitting_binpacking_model when finished in LIDI cluster
+        Experiment('svm/kidney/logs_kidney_svm_new_binpacking_model_kernel_rbf_regression_1_core',
+                   'Kidney LB (full) SVM RBF',
+                   plot_predictions=True, only_consider_intersection=True),
+        Experiment('svm/kidney/logs_kidney_svm_overfitting_binpacking_model_kernel_rbf_regression_1_core',
+                   'Kidney LB (overfitting) SVM RBF',
+                   plot_predictions=True, only_consider_intersection=True),
     ]
 
     for experiment in experiments:
@@ -538,6 +584,6 @@ def main():
 
 
 if __name__ == '__main__':
-    if not PLOT_IMAGES and not SAVE_IMGS:
-        raise Exception('PLOT_IMAGES and SAVE_IMGS cannot be both False.')
+    if not PLOT_IMAGES and not SAVE_IMGS and not SAVE_CSV_FILES:
+        raise Exception('PLOT_IMAGES, SAVE_IMGS and SAVE_CSV_FILES cannot be both False.')
     main()
