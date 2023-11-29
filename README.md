@@ -75,7 +75,8 @@ Los modelos de Load Balancer se encuentran en la carpeta `Trained_models`. Los m
 El entrenamiento de todos estos modelos se realizan en el script `load_balancer_model.py`. Los modelos se entrenan con los parámetros obtenidos en el script `grid_search_params.py`.
 
 Si tienen el sufijo `_full` es porque fueron entrenados con los datos [ClusteringTimesRecord_full-2023-10-24.csv](LoadBalancerDatasets%2FClusteringTimesRecord_full-2023-10-24.csv), y
-[SVMTimesRecord_full-2023-10-24.csv](LoadBalancerDatasets%2FSVMTimesRecord_full-2023-10-24.csv). Si no los tienen entonces los modelos fueron entrenados solo con la información extraída de Multiomix (menos datos).
+[SVMTimesRecord_full-2023-10-24.csv](LoadBalancerDatasets%2FSVMTimesRecord_full-2023-10-24.csv). Si tiene el sufijo `_overfitting` es porque fueron entrenados con los datos [ClusteringTimesRecord_overfitting-2023-10-24.csv](LoadBalancerDatasets%2FClusteringTimesRecord_overfitting-2023-10-24.csv), y [SVMTimesRecord_overfitting-2023-10-24.csv](LoadBalancerDatasets%2FSVMTimesRecord_overfitting-2023-10-24.csv). 
+Si no los tienen entonces los modelos fueron entrenados solo con la información extraída de Multiomix (menos datos).
 
 
 ## Organización del código
