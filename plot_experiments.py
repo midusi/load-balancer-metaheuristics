@@ -113,35 +113,27 @@ def generate_bar_charts(data: WorkerBarTimes, title: str, data_type: DataType):
             csv_data['Time'].extend(data_times_per_iteration)
 
     if SAVE_CSV_FILES:
-        # Makes a summary making a mean and std of the times per iteration, per worker. Takes the data from the
-        # csv_data dict
+        # Makes a summary making a mean and std of the times per iteration to check if there's some improvement.
+        # Takes the data from the csv_data dict
         csv_summary_data = {
             'Iteration': [],
-            'Worker': [],
             'Mean': [],
             'Std': []
         }
-        for idx, worker in enumerate(np.unique(csv_data['Worker'])):
-            # Gets the times of the current worker
-            idxs = np.array(csv_data['Worker']) == worker
-            iterations = np.array(csv_data['Iteration'])[idxs]
 
-            # Iterates over iterations for the current worker
-            for iteration in np.unique(iterations):
-                # Gets the times of the current iteration
-                idxs = np.where(
-                    (np.array(csv_data['Iteration']) == iteration) & (np.array(csv_data['Worker']) == worker))
-                times = np.array(csv_data['Time'])[idxs]
+        # Iterates over iterations for the current worker
+        for iteration in np.unique(iterations):
+            idxs = np.array(csv_data['Iteration']) == iteration
+            times = np.array(csv_data['Time'])[idxs]
 
-                # Gets the mean and std
-                mean = np.mean(times)
-                std = np.std(times)
+            # Gets the mean and std
+            mean = np.mean(times)
+            std = np.std(times)
 
-                # Appends to the summary dict
-                csv_summary_data['Iteration'].append(iteration)
-                csv_summary_data['Worker'].append(worker)
-                csv_summary_data['Mean'].append(mean)
-                csv_summary_data['Std'].append(std)
+            # Appends to the summary dict
+            csv_summary_data['Iteration'].append(iteration)
+            csv_summary_data['Mean'].append(mean)
+            csv_summary_data['Std'].append(std)
     else:
         csv_summary_data = None
 
@@ -151,7 +143,7 @@ def generate_bar_charts(data: WorkerBarTimes, title: str, data_type: DataType):
     # Saves images and CSV files
     __save_img(fig_title)
     __save_csv(csv_data, fig_title)
-    __save_csv(csv_summary_data, fig_title + '_summary')
+    __save_csv(csv_summary_data, f'{fig_title} summary')
 
 
 def generate_predictions_line_charts(n_features: List[float], execution_times: List[float],
@@ -234,7 +226,7 @@ def generate_predictions_line_charts(n_features: List[float], execution_times: L
         csv_data['Execution time'].extend(execution_means)
         csv_data['Predicted time'].extend(predicted_means)
         csv_data['Mean squared error'].extend([(execution_mean - predicted_mean) ** 2 for execution_mean,
-                                                         predicted_mean in zip(execution_means, predicted_means)])
+                                               predicted_mean in zip(execution_means, predicted_means)])
 
     # Saves images and CSV files
     __save_img(fig_title)
