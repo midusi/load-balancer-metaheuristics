@@ -49,8 +49,7 @@ def __save_img(title: str):
         if not os.path.exists(save_path):
             os.makedirs(save_path)
 
-        # Replaces the \n with _
-        # fig_path = os.path.join(save_path, f'{title}').replace('\n', '_').replace('.', '_').replace(' ', '_')[:90].strip()
+        # Replaces the \n with _, and reduces the title to 90 characters to prevent issues in Windows
         fig_path = os.path.join(save_path, f'{title}').replace('\n', '_')[:90].strip()
         print(f'"{fig_path}.png"')
         plt.savefig(fig_path + '.png')
@@ -83,19 +82,20 @@ def generate_bar_charts(data: WorkerBarTimes, title: str, data_type: DataType):
 
     # Adds some text for labels, title and axes ticks
     ax.set_ylabel(f'{data_type} time (seconds)')
-    fig_title = f'{data_type[:4]} {title}'   # Makes the title shorter
+    fig_title = f'{data_type[:4]} {title}'  # Makes the title shorter
     ax.set_title(fig_title)
 
     # In case SAVE_CSV_FILES is True, creates a dict with the data to save it in a CSV file
+    csv_data: Optional[Dict[str, List[float]]]
+    csv_summary_data: Optional[Dict[str, List[float]]]
     if SAVE_CSV_FILES:
-        csv_data: Dict[str, List[float]] = {
+        csv_data = {
             'Iteration': [],
             'Worker': [],
             'Time': []
         }
     else:
         csv_data = None
-
 
     width = 0.25
     iterations: np.ndarray = np.array([])  # Just to prevent MyPy warning
@@ -112,12 +112,46 @@ def generate_bar_charts(data: WorkerBarTimes, title: str, data_type: DataType):
             csv_data['Worker'].extend([worker] * len(iterations))
             csv_data['Time'].extend(data_times_per_iteration)
 
+    if SAVE_CSV_FILES:
+        # Makes a summary making a mean and std of the times per iteration, per worker. Takes the data from the
+        # csv_data dict
+        csv_summary_data = {
+            'Iteration': [],
+            'Worker': [],
+            'Mean': [],
+            'Std': []
+        }
+        for idx, worker in enumerate(np.unique(csv_data['Worker'])):
+            # Gets the times of the current worker
+            idxs = np.array(csv_data['Worker']) == worker
+            iterations = np.array(csv_data['Iteration'])[idxs]
+
+            # Iterates over iterations for the current worker
+            for iteration in np.unique(iterations):
+                # Gets the times of the current iteration
+                idxs = np.where(
+                    (np.array(csv_data['Iteration']) == iteration) & (np.array(csv_data['Worker']) == worker))
+                times = np.array(csv_data['Time'])[idxs]
+
+                # Gets the mean and std
+                mean = np.mean(times)
+                std = np.std(times)
+
+                # Appends to the summary dict
+                csv_summary_data['Iteration'].append(iteration)
+                csv_summary_data['Worker'].append(worker)
+                csv_summary_data['Mean'].append(mean)
+                csv_summary_data['Std'].append(std)
+    else:
+        csv_summary_data = None
+
     plt.xticks(iterations)
     plt.legend()
 
     # Saves images and CSV files
     __save_img(fig_title)
     __save_csv(csv_data, fig_title)
+    __save_csv(csv_summary_data, fig_title + '_summary')
 
 
 def generate_predictions_line_charts(n_features: List[float], execution_times: List[float],
@@ -145,6 +179,16 @@ def generate_predictions_line_charts(n_features: List[float], execution_times: L
     execution_std_errors = []
     predicted_means = []
     predicted_std_errors = []
+
+    if SAVE_CSV_FILES:
+        csv_data: Dict[str, List[float]] | None = {
+            'Number of features': [],
+            'Execution time': [],
+            'Predicted time': [],
+            'Mean squared error': []
+        }
+    else:
+        csv_data = None
 
     unique_n_features = np.unique(n_features)
     for current_n_features in unique_n_features:
@@ -185,7 +229,16 @@ def generate_predictions_line_charts(n_features: List[float], execution_times: L
     fig_title = f'Execution and predicted times. {title}'
     plt.title(f'Execution and predicted times. {title}')
 
+    if SAVE_CSV_FILES:
+        csv_data['Number of features'].extend(unique_n_features)
+        csv_data['Execution time'].extend(execution_means)
+        csv_data['Predicted time'].extend(predicted_means)
+        csv_data['Mean squared error'].extend([(execution_mean - predicted_mean) ** 2 for execution_mean,
+                                                         predicted_mean in zip(execution_means, predicted_means)])
+
+    # Saves images and CSV files
     __save_img(fig_title)
+    __save_csv(csv_data, fig_title)
 
 
 def get_mean_and_std(values: np.ndarray) -> Tuple[float, float]:
