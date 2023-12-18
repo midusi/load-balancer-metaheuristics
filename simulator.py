@@ -1,9 +1,10 @@
 import time
+from collections import OrderedDict
 from copy import deepcopy
-from math import ceil
 from typing import Literal, Final, Optional, Union
 import binpacking
 import numpy as np
+import pandas as pd
 from mknapsack import solve_multiple_knapsack
 from metaheuristics import get_random_subset_of_features
 import matplotlib.pyplot as plt
@@ -37,18 +38,20 @@ RANDOM_SEED: Final[Optional[int]] = 12
 
 # If true, adds a delay to worker number 2
 ADD_DELAY_TO_WORKER_2: Final[bool] = True
+# ADD_DELAY_TO_WORKER_2: Final[bool] = False
 
 # Some constants
 N_WORKERS: Final = 3
-N_STARS: Final = 6
+N_STARS: Final = 30
 N_FEATURES: Final = 90
-ITERATIONS: Final = 3
-
-# Factor to divide the time of execution (to make experiments faster)
-FACTOR: Final[int] = 9
+ITERATIONS: Final = 30
 
 # To print useful information
 DEBUG: Final = True
+
+# To save data/images
+SAVE_DATA: Final = False
+SAVE_IMAGES: Final = False
 
 
 def __print_all_knapsack(weights, capacities):
@@ -90,17 +93,15 @@ def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker,
     for rdd in rdds:
         worker_id = partition_to_worker[rdd.partition]
 
-        worker_start = time.time()
-        _current_fitness = __fitness_function(rdd.subset)
-        worker_end = time.time()
-
-        worker_execution_time = worker_end - worker_start
+        worker_execution_time = __fitness_function(rdd.subset)
 
         if delay_for_worker is not None and worker_id in delay_for_worker:
             if DEBUG:
                 print(f'Worker {worker_id} has a delay of {delay_for_worker[worker_id]}')
                 print(f'Original execution time: {worker_execution_time} | New execution time: '
                       f'{worker_execution_time * delay_for_worker[worker_id]}')
+
+            # No need to sleep, is a simulation
             worker_execution_time *= delay_for_worker[worker_id]
 
         # Stores the execution time of the worker
@@ -115,7 +116,11 @@ def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker,
     max_worker_time = -1  # Slowest
     for worker_id in worker_execution_times:
         sum_worker_time = np.sum(worker_execution_times[worker_id])
-        sum_worker_time_predicted = np.sum(worker_predicted_times[worker_id])
+
+        if STRATEGY != 'n_stars':
+            sum_worker_time_predicted = np.sum(worker_predicted_times[worker_id])
+        else:
+            sum_worker_time_predicted = 0.0
 
         if DEBUG:
             print(f'Worker {worker_id} has executed {len(worker_execution_times[worker_id])} RDDs in '
@@ -132,7 +137,10 @@ def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker,
     delay_percentage: DelayForWorker = {}
     for worker_id in worker_execution_times:
         worker_sum_time = np.sum(worker_execution_times[worker_id])
-        sum_predictions = np.sum(worker_predicted_times[worker_id])
+        if STRATEGY != 'n_stars':
+            sum_predictions = np.sum(worker_predicted_times[worker_id])
+        else:
+            sum_predictions = 0.0
 
         idle_time = max_worker_time - worker_sum_time
         idle_times[worker_id] = idle_time
@@ -144,11 +152,9 @@ def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker,
     return worker_execution_times, idle_times, delay_percentage
 
 
-def __fitness_function(subset: np.ndarray) -> int:
-    """Simulates a fitness function. It will return the number of features in the subset, and it'll last the same amount
-    of time as the number of features in the subset."""
-    time.sleep(np.count_nonzero(subset) / FACTOR)
-    return len(subset)
+def __fitness_function(subset: np.ndarray) -> float:
+    """Simulates a fitness function. It will some simulated execution time to make some experiments fast."""
+    return np.count_nonzero(subset)
 
 
 def __predict(subset: np.ndarray, random_seed: Optional[int]) -> float:
@@ -156,7 +162,7 @@ def __predict(subset: np.ndarray, random_seed: Optional[int]) -> float:
     if random_seed is not None:
         np.random.seed(random_seed)
 
-    return (np.count_nonzero(subset) + np.random.uniform(-1, 1)) / FACTOR
+    return np.count_nonzero(subset) + np.random.uniform(-1, 1)
 
 
 def __generate_stars_and_partitions_bins(bins: list) -> dict[int, int]:
@@ -224,30 +230,31 @@ def __smart_strategy(rdds: list[Rdd], workers_delay: dict[str, float]) -> list[R
         prediction = __predict(rdd.subset, random_seed)
         rdd.prediction = prediction
 
-        weights.append(ceil(prediction))
+        prediction = max(round(prediction), 1)  # Prevents division by 0
+        weights.append(prediction)
 
     while len(tasks) > 0:
         # ...and N_WORKERS knapsacks with the same capacity (the sum of all the weights) / N_WORKERS
-        weight_per_worker_equal = ceil(sum(weights) / N_WORKERS)
+        weight_per_worker_equal = round(sum(weights) / N_WORKERS)
         min_weight = min(weights)
         weight_per_worker = max(weight_per_worker_equal, min_weight)
 
         capacities = [weight_per_worker for _ in range(N_WORKERS)]
 
-        if DEBUG:
-            print('Before applying delay:')
-            __print_all_knapsack(weights, capacities)
-
         if workers_delay is not None:
+            if DEBUG:
+                print('Before applying delay:')
+                __print_all_knapsack(weights, capacities)
+
             for idx in range(N_WORKERS):
                 old_capacity = capacities[idx]
                 worker_id = __get_worker_id(idx)
                 delay_for_worker = workers_delay[worker_id]
                 capacities[idx] *= delay_for_worker
-                capacities[idx] = ceil(capacities[idx])
+                capacities[idx] = round(capacities[idx])
 
                 if DEBUG:
-                    diff = round((old_capacity - capacities[idx]) / old_capacity * 100, 2)
+                    diff = round(((old_capacity - capacities[idx]) / old_capacity) * 100, 2)
                     print(f'Worker {idx}: {old_capacity} -> {capacities[idx]}. Decremented/Incremented in a '
                           f'~{abs(diff)}% | Applied {delay_for_worker}')
 
@@ -315,7 +322,7 @@ def __generate_partition_to_work_default() -> PartitionToWorker:
 
 def __assign_partitions(rdds: list[Rdd], strategy: PartitionStrategy,
                         workers_delay: Optional[DelayForWorker] = None) -> tuple[list[Rdd], PartitionToWorker]:
-    """Assigns the partition to each RDD depending on the strategy. TODO: implement smart strategy"""
+    """Assigns the partition to each RDD depending on the strategy."""
     if strategy == 'binpacking':
         return __binpacking_strategy(rdds), __generate_partition_to_work_default()
     if strategy == 'n_stars':
@@ -351,6 +358,10 @@ def generate_bar_charts(data: WorkerBarTimes, title: str, data_type: Literal['Ex
     fig_title = f'{data_type} time per worker. {title}'
     ax.set_title(fig_title)
 
+    # Generates a sorted dict with the worker name as key and the list of execution times as value to show the
+    # legends in the same order
+    data = OrderedDict(sorted(data.items(), key=lambda x: x[0]))
+
     width = 0.25
     iterations: np.ndarray = np.array([])  # Just to prevent MyPy warning
     max_y_value = -1
@@ -358,7 +369,10 @@ def generate_bar_charts(data: WorkerBarTimes, title: str, data_type: Literal['Ex
         np_array = np.array(data[worker])
         iterations = np_array[:, 0] + 1  # +1 to start from 1 instead of 0
         data_times_per_iteration = np_array[:, 1]
-        # print(f'Worker {worker} | {data_type} times: {data_times_per_iteration}')
+
+        # Adds the bar chart
+        if DEBUG:
+            print(f'worker: {worker} | data_times_per_iteration: {data_times_per_iteration}')
         margin = width * idx
         plt.bar(iterations + margin, data_times_per_iteration, width=width, label=worker)
 
@@ -369,14 +383,47 @@ def generate_bar_charts(data: WorkerBarTimes, title: str, data_type: Literal['Ex
     plt.ylim(0, max(10, max_y_value) + 2)
     plt.xticks(iterations)
 
-    # Gets labels and shows them sorted
-    _handles, labels = plt.gca().get_legend_handles_labels()
-    plt.legend(sorted(labels))
+    # Show legend
+    plt.legend()
 
 
 def __get_worker_id(worker_id: int) -> str:
     """Gets the worker identifier from the id passed by param (useful to standardize delays)."""
     return f'worker_{worker_id}'
+
+
+def __save_data(execution_times_worker: WorkerBarTimes, idle_times_worker: WorkerBarTimes):
+    """Saves the data in a CSV file."""
+    data = []
+    for worker_id in execution_times_worker:
+        for execution_time in execution_times_worker[worker_id]:
+            data.append([worker_id, 'execution', execution_time[0], execution_time[1]])
+
+    for worker_id in idle_times_worker:
+        for idle_time in idle_times_worker[worker_id]:
+            data.append([worker_id, 'idle', idle_time[0], idle_time[1]])
+
+    data = sorted(data, key=lambda x: x[2])
+    df = pd.DataFrame(data, columns=['worker_id', 'type', 'iteration', 'time'])
+    df.to_csv(f'Simulator_results/data_{STRATEGY}.csv', index=False)
+
+    # Generates a summary CSV which stores for every iteration, the mean and std of execution times, and idle times
+    data = []
+    for iteration in range(ITERATIONS):
+        execution_times = []
+        idle_times = []
+
+        for worker_id in execution_times_worker:
+            execution_times.extend(
+                [x[1] for x in execution_times_worker[worker_id] if x[0] == iteration and x[1] > 0.0])
+            idle_times.extend([x[1] for x in idle_times_worker[worker_id] if x[0] == iteration and x[1] > 0.0])
+
+        data.append([iteration, np.mean(execution_times), np.std(execution_times),
+                     np.mean(idle_times), np.std(idle_times)])
+
+    df = pd.DataFrame(data, columns=['iteration', 'mean_execution_time', 'std_execution_time',
+                                     'mean_idle_time', 'std_idle_time'])
+    df.to_csv(f'Simulator_results/summary_{STRATEGY}.csv', index=False)
 
 
 def main():
@@ -411,7 +458,7 @@ def main():
         # Generates a dict with the worker identifier as key and the delay to apply in every execution as value
         if ADD_DELAY_TO_WORKER_2:
             delay_for_worker: Optional[DelayForWorker] = {
-                __get_worker_id(2): 1.75,
+                __get_worker_id(2): 1.40,
             }
         else:
             delay_for_worker = None
@@ -427,6 +474,8 @@ def main():
             print(f'worker_execution_times: {current_execution_times}')
             print(f'idle_times: {current_idle_times}')
             print(f'previous_delay_percentage: {previous_delay_percentage}')
+            flatten_list = np.concatenate(list(current_execution_times.values())).ravel()
+            print(f'Iteration total time: {sum(flatten_list)}')
 
         # Adds the data to execution and idle times
         __add_to_worker_dict(current_execution_times, execution_times_worker, iteration)
@@ -434,6 +483,17 @@ def main():
 
     generate_bar_charts(execution_times_worker, f'Strategy = {STRATEGY}', 'Execution')
     generate_bar_charts(idle_times_worker, f'Strategy = {STRATEGY}', 'Idle')
+
+    # Generates a CSV with the data
+    if SAVE_DATA:
+        __save_data(execution_times_worker, idle_times_worker)
+
+    # Saves imgs
+    if SAVE_IMAGES:
+        plt.savefig(f'Simulator_results/execution_times_{STRATEGY}.png')
+        plt.savefig(f'Simulator_results/idle_times_{STRATEGY}.png')
+
+    # Shows the bar charts
     plt.show()
 
 
