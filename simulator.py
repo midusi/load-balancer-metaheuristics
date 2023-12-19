@@ -33,9 +33,6 @@ PartitionStrategy = Literal['n_stars', 'binpacking', 'smart']
 # STRATEGY: Final[PartitionStrategy] = 'binpacking'
 STRATEGY: Final[PartitionStrategy] = 'smart'
 
-# Seed for reproducibility
-RANDOM_SEED: Final[Optional[int]] = 12
-
 # If true, adds a delay to worker number 2
 ADD_DELAY_TO_WORKER_2: Final[bool] = True
 # ADD_DELAY_TO_WORKER_2: Final[bool] = False
@@ -50,8 +47,11 @@ ITERATIONS: Final = 30
 DEBUG: Final = True
 
 # To save data/images
-SAVE_DATA: Final = False
-SAVE_IMAGES: Final = False
+SAVE_DATA: Final = True
+SAVE_IMAGES: Final = True
+
+# To plot images
+PLOT_IMAGES: Final = False
 
 
 def __print_all_knapsack(weights, capacities):
@@ -78,13 +78,14 @@ class Rdd:
         return f"Rdd(partition={self.partition}, n_features={np.count_nonzero(self.subset)})"
 
 
-def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker,
+def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker, strategy: PartitionStrategy,
             delay_for_worker: Optional[DelayForWorker]) -> tuple[WorkerTimes, WorkerIdleTime, DelayForWorker]:
     """
     Simulates the collect() method of Spark.
     :param rdds: List of RDD to evaluate.
     :param partition_to_worker: Dict with the partition identifier as key and the worker identifier on which the
     partition will be computed as value.
+    :param strategy: Strategy to define partitions.
     :param delay_for_worker: Dict with the worker identifier as key and some delay to apply in every execution.
     """
     worker_execution_times: WorkerTimes = {}
@@ -117,7 +118,7 @@ def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker,
     for worker_id in worker_execution_times:
         sum_worker_time = np.sum(worker_execution_times[worker_id])
 
-        if STRATEGY != 'n_stars':
+        if strategy != 'n_stars':
             sum_worker_time_predicted = np.sum(worker_predicted_times[worker_id])
         else:
             sum_worker_time_predicted = 0.0
@@ -137,7 +138,7 @@ def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker,
     delay_percentage: DelayForWorker = {}
     for worker_id in worker_execution_times:
         worker_sum_time = np.sum(worker_execution_times[worker_id])
-        if STRATEGY != 'n_stars':
+        if strategy != 'n_stars':
             sum_predictions = np.sum(worker_predicted_times[worker_id])
         else:
             sum_predictions = 0.0
@@ -178,13 +179,13 @@ def __generate_stars_and_partitions_bins(bins: list) -> dict[int, int]:
     return stars_and_partitions
 
 
-def __binpacking_strategy(rdds: list[Rdd]) -> list[Rdd]:
+def __binpacking_strategy(rdds: list[Rdd], random_seed: Optional[int]) -> list[Rdd]:
     res_rdd = deepcopy(rdds)
 
     stars_and_times: dict[str, float] = {}
     for (idx, rdd) in enumerate(res_rdd):
-        random_seed = RANDOM_SEED + idx if RANDOM_SEED is not None else None
-        stars_and_times[idx] = __predict(rdd.subset, random_seed)
+        current_random_seed = random_seed + idx if random_seed is not None else None
+        stars_and_times[idx] = __predict(rdd.subset, current_random_seed)
         rdd.prediction = stars_and_times[idx]
 
     bins = binpacking.to_constant_bin_number(stars_and_times, N_WORKERS)  # n_workers is the number of bins
@@ -207,7 +208,7 @@ def __binpacking_strategy(rdds: list[Rdd]) -> list[Rdd]:
     return res_rdd
 
 
-def __smart_strategy(rdds: list[Rdd], workers_delay: dict[str, float]) -> list[Rdd]:
+def __smart_strategy(rdds: list[Rdd], workers_delay: dict[str, float], random_seed: Optional[int]) -> list[Rdd]:
     res_rdd = deepcopy(rdds)
 
     # Dict with the partition identifier as key and the list of RDDs as value. Starts from 1 as 0 means not assigned
@@ -226,8 +227,8 @@ def __smart_strategy(rdds: list[Rdd], workers_delay: dict[str, float]) -> list[R
     # Gets the weights of every RDD
     weights = []
     for (idx, rdd) in enumerate(res_rdd):
-        random_seed = RANDOM_SEED + idx if RANDOM_SEED is not None else None
-        prediction = __predict(rdd.subset, random_seed)
+        current_random_seed = random_seed + idx if random_seed is not None else None
+        prediction = __predict(rdd.subset, current_random_seed)
         rdd.prediction = prediction
 
         prediction = max(round(prediction), 1)  # Prevents division by 0
@@ -251,7 +252,7 @@ def __smart_strategy(rdds: list[Rdd], workers_delay: dict[str, float]) -> list[R
                 worker_id = __get_worker_id(idx)
                 delay_for_worker = workers_delay[worker_id]
                 capacities[idx] *= delay_for_worker
-                capacities[idx] = round(capacities[idx])
+                capacities[idx] = max(round(capacities[idx]), min_weight)
 
                 if DEBUG:
                     diff = round(((old_capacity - capacities[idx]) / old_capacity) * 100, 2)
@@ -263,6 +264,7 @@ def __smart_strategy(rdds: list[Rdd], workers_delay: dict[str, float]) -> list[R
                 __print_all_knapsack(weights, capacities)
         elif DEBUG:
             print('No delay to apply')
+            __print_all_knapsack(weights, capacities)
 
         # Assign items into the knapsacks while maximizing profits
         # NOTE: check_inputs=0 is used to avoid checking the inputs in the Fortran code and raise an error
@@ -286,7 +288,7 @@ def __smart_strategy(rdds: list[Rdd], workers_delay: dict[str, float]) -> list[R
                 # Removes the task from the list of tasks and weights
                 tasks_to_remove.add(idx)
 
-        # Removes already asigned tasks
+        # Removes already assigned tasks
         rdds_idxs = [task_idx for idx, task_idx in enumerate(rdds_idxs) if idx not in tasks_to_remove]
         tasks = [task for idx, task in enumerate(tasks) if idx not in tasks_to_remove]
         weights = [weight for idx, weight in enumerate(weights) if idx not in tasks_to_remove]
@@ -321,17 +323,18 @@ def __generate_partition_to_work_default() -> PartitionToWorker:
 
 
 def __assign_partitions(rdds: list[Rdd], strategy: PartitionStrategy,
+                        random_seed: Optional[int],
                         workers_delay: Optional[DelayForWorker] = None) -> tuple[list[Rdd], PartitionToWorker]:
     """Assigns the partition to each RDD depending on the strategy."""
     if strategy == 'binpacking':
-        return __binpacking_strategy(rdds), __generate_partition_to_work_default()
+        return __binpacking_strategy(rdds, random_seed), __generate_partition_to_work_default()
     if strategy == 'n_stars':
         # Separates the RDDs in N_STARS groups
         len_rdds = len(rdds)
         return ([Rdd(i * N_WORKERS // len(rdds), rdds[i].subset) for i in range(len_rdds)],
                 __generate_partition_to_work_default())
     if strategy == 'smart':
-        return __smart_strategy(rdds, workers_delay), __generate_partition_to_work_default()
+        return __smart_strategy(rdds, workers_delay, random_seed), __generate_partition_to_work_default()
 
 
 def __add_to_worker_dict(current_execution_times: Union[WorkerTimes, WorkerIdleTime],
@@ -372,7 +375,7 @@ def generate_bar_charts(data: WorkerBarTimes, title: str, data_type: Literal['Ex
 
         # Adds the bar chart
         if DEBUG:
-            print(f'worker: {worker} | data_times_per_iteration: {data_times_per_iteration}')
+            print(f'Worker: {worker} | data_times_per_iteration: {data_times_per_iteration}')
         margin = width * idx
         plt.bar(iterations + margin, data_times_per_iteration, width=width, label=worker)
 
@@ -392,7 +395,8 @@ def __get_worker_id(worker_id: int) -> str:
     return f'worker_{worker_id}'
 
 
-def __save_data(execution_times_worker: WorkerBarTimes, idle_times_worker: WorkerBarTimes):
+def __save_data(execution_times_worker: WorkerBarTimes, idle_times_worker: WorkerBarTimes, strategy: PartitionStrategy,
+                random_seed: Optional[int]):
     """Saves the data in a CSV file."""
     data = []
     for worker_id in execution_times_worker:
@@ -405,7 +409,7 @@ def __save_data(execution_times_worker: WorkerBarTimes, idle_times_worker: Worke
 
     data = sorted(data, key=lambda x: x[2])
     df = pd.DataFrame(data, columns=['worker_id', 'type', 'iteration', 'time'])
-    df.to_csv(f'Simulator_results/data_{STRATEGY}.csv', index=False)
+    df.to_csv(f'Simulator_results/data_{strategy}_random_{random_seed}.csv', index=False)
 
     # Generates a summary CSV which stores for every iteration, the mean and std of execution times, and idle times
     data = []
@@ -423,10 +427,10 @@ def __save_data(execution_times_worker: WorkerBarTimes, idle_times_worker: Worke
 
     df = pd.DataFrame(data, columns=['iteration', 'mean_execution_time', 'std_execution_time',
                                      'mean_idle_time', 'std_idle_time'])
-    df.to_csv(f'Simulator_results/summary_{STRATEGY}.csv', index=False)
+    df.to_csv(f'Simulator_results/summary_{strategy}_random_{random_seed}.csv', index=False)
 
 
-def main():
+def main(strategy: PartitionStrategy, random_seed: Optional[int] = None):
     execution_times_worker: WorkerBarTimes = {}
     idle_times_worker: WorkerBarTimes = {}
 
@@ -439,8 +443,8 @@ def main():
         rdds: list[Rdd] = []
 
         for i in range(N_STARS):
-            random_seed = (RANDOM_SEED + i) * (iteration + 1) if RANDOM_SEED is not None else None
-            random_features_to_select = get_random_subset_of_features(N_FEATURES, random_state=random_seed)
+            current_random_seed = (random_seed + i) * (iteration + 1) if random_seed is not None else None
+            random_features_to_select = get_random_subset_of_features(N_FEATURES, random_state=current_random_seed)
             rdd = Rdd(i, random_features_to_select)
             rdds.append(rdd)
 
@@ -449,7 +453,7 @@ def main():
             print(rdds)
 
         # Assigns the partition to each RDD
-        rdds, partition_to_worker = __assign_partitions(rdds, STRATEGY, previous_delay_percentage)
+        rdds, partition_to_worker = __assign_partitions(rdds, strategy, random_seed, previous_delay_percentage)
 
         if DEBUG:
             print('rdds after assign partitions')
@@ -467,6 +471,7 @@ def main():
         current_execution_times, current_idle_times, previous_delay_percentage = collect(
             rdds,
             partition_to_worker,
+            strategy,
             delay_for_worker
         )
 
@@ -481,21 +486,26 @@ def main():
         __add_to_worker_dict(current_execution_times, execution_times_worker, iteration)
         __add_to_worker_dict(current_idle_times, idle_times_worker, iteration)
 
-    generate_bar_charts(execution_times_worker, f'Strategy = {STRATEGY}', 'Execution')
-    generate_bar_charts(idle_times_worker, f'Strategy = {STRATEGY}', 'Idle')
+    generate_bar_charts(execution_times_worker, f'Strategy = {strategy}', 'Execution')
+    generate_bar_charts(idle_times_worker, f'Strategy = {strategy}', 'Idle')
 
     # Generates a CSV with the data
     if SAVE_DATA:
-        __save_data(execution_times_worker, idle_times_worker)
+        __save_data(execution_times_worker, idle_times_worker, strategy, random_seed)
 
-    # Saves imgs
+    # Saves images
     if SAVE_IMAGES:
-        plt.savefig(f'Simulator_results/execution_times_{STRATEGY}.png')
-        plt.savefig(f'Simulator_results/idle_times_{STRATEGY}.png')
-
-    # Shows the bar charts
-    plt.show()
+        plt.savefig(f'Simulator_results/execution_times_{strategy}_random_{random_seed}.png')
+        plt.savefig(f'Simulator_results/idle_times_{strategy}_random_{random_seed}.png')
 
 
 if __name__ == '__main__':
-    main()
+    for random_seed_to_test in range(100, 1000, 100):
+        for strategy_to_test in ['n_stars', 'binpacking', 'smart']:
+            print(f'Strategy: {strategy_to_test} | Random seed: {random_seed_to_test}')
+            print('====================================')
+            main(strategy=strategy_to_test, random_seed=random_seed_to_test)
+
+    # Shows the bar charts
+    if PLOT_IMAGES:
+        plt.show()
