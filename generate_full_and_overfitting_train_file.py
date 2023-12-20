@@ -23,6 +23,7 @@ SAVE_FULL_MODEL = False
 # To show values count and other extra data about final DataFrame
 DEBUG = False
 
+
 def clustering_training():
     clustering_path = os.path.join(FOLDER, CLUSTERING_FOLDER)
     print(f'Clustering training. Getting data from {clustering_path}')
@@ -110,6 +111,7 @@ def __get_kernel_int_value(value: str) -> int:
         return 3
 
     raise ValueError(f'Invalid kernel value: {value}')
+
 
 def svm_training():
     svm_path = os.path.join(FOLDER, SVM_FOLDER)

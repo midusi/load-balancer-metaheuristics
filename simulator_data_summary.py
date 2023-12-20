@@ -65,7 +65,7 @@ def main(random_seed: int):
         df_smart_iteration = df_smart[df_smart['iteration'] == iteration]
 
         # Adds iteration
-        df_result['iteration'].append(iteration)
+        df_result['iteration'].append(iteration + 1)  # Starts at 1 like the bar plots
 
         # Retrieves the mean and std for the execution and idle time for each strategy
         __get_time_type(df_n_stars_iteration, df_binpacking_iteration, df_smart_iteration, df_result, 'execution')
