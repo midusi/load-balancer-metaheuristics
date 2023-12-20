@@ -386,6 +386,10 @@ def generate_bar_charts(data: WorkerBarTimes, title: str, data_type: Literal['Ex
     plt.ylim(0, max(10, max_y_value) + 2)
     plt.xticks(iterations)
 
+    # Saves images
+    if SAVE_IMAGES:
+        plt.savefig(f'Simulator_results/{data_type}_times_{strategy_to_test}_random_{random_seed_to_test}.png')
+
     # Show legend
     plt.legend()
 
@@ -492,11 +496,6 @@ def main(strategy: PartitionStrategy, random_seed: Optional[int] = None):
     # Generates a CSV with the data
     if SAVE_DATA:
         __save_data(execution_times_worker, idle_times_worker, strategy, random_seed)
-
-    # Saves images
-    if SAVE_IMAGES:
-        plt.savefig(f'Simulator_results/execution_times_{strategy}_random_{random_seed}.png')
-        plt.savefig(f'Simulator_results/idle_times_{strategy}_random_{random_seed}.png')
 
 
 if __name__ == '__main__':
