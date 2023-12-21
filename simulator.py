@@ -376,22 +376,28 @@ def generate_bar_charts(data: WorkerBarTimes, title: str, data_type: Literal['Ex
         # Adds the bar chart
         if DEBUG:
             print(f'Worker: {worker} | data_times_per_iteration: {data_times_per_iteration}')
-        margin = width * idx
+        margin = width * idx - width * (len(data) / 3)
         plt.bar(iterations + margin, data_times_per_iteration, width=width, label=worker)
 
         # Updates max_y_value
         max_y_value = max(max_y_value, np.max(data_times_per_iteration))
 
-    # Sets 10 as max value for y axis
-    plt.ylim(0, max(10, max_y_value) + 2)
+    # Sets 10 as min value for y axis
+    plt.ylim(0, max(10, max_y_value) + 50)
     plt.xticks(iterations)
+
+    # Show legend
+    plt.legend(loc='upper left')
+
+    # Sets a wider figure
+    fig = plt.gcf()
+    fig.set_size_inches(18.5, 10.5)
 
     # Saves images
     if SAVE_IMAGES:
-        plt.savefig(f'Simulator_results/{data_type}_times_{strategy_to_test}_random_{random_seed_to_test}.png')
-
-    # Show legend
-    plt.legend()
+        fig_path = f'Simulator_results/{data_type}_times_{strategy_to_test}_random_{random_seed_to_test}.png'
+        print(f'Saving image to {fig_path}')
+        plt.savefig(fig_path)
 
 
 def __get_worker_id(worker_id: int) -> str:
