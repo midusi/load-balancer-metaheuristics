@@ -1,5 +1,6 @@
 import pandas as pd
 from typing import Literal
+from scipy.stats import wilcoxon
 from simulator import ITERATIONS
 
 
@@ -11,12 +12,12 @@ def __get_time_type(df_n_stars_iteration: pd.DataFrame, df_binpacking_iteration:
     df_smart_iteration_execution = df_smart_iteration[df_smart_iteration['type'] == data_type]
 
     # Retrieves the mean and std
-    mean_n_stars = df_n_stars_iteration_execution['time'].mean()
-    std_n_stars = df_n_stars_iteration_execution['time'].std()
-    mean_binpacking = df_binpacking_iteration_execution['time'].mean()
-    std_binpacking = df_binpacking_iteration_execution['time'].std()
-    mean_smart = df_smart_iteration_execution['time'].mean()
-    std_smart = df_smart_iteration_execution['time'].std()
+    mean_n_stars = round(df_n_stars_iteration_execution['time'].mean(), 3)
+    std_n_stars = round(df_n_stars_iteration_execution['time'].std(), 3)
+    mean_binpacking = round(df_binpacking_iteration_execution['time'].mean(), 3)
+    std_binpacking = round(df_binpacking_iteration_execution['time'].std(), 3)
+    mean_smart = round(df_smart_iteration_execution['time'].mean(), 3)
+    std_smart = round(df_smart_iteration_execution['time'].std(), 3)
 
     # Retrieves the strategy with the minimum mean
     if mean_smart < mean_binpacking and mean_smart < mean_n_stars:
@@ -26,14 +27,42 @@ def __get_time_type(df_n_stars_iteration: pd.DataFrame, df_binpacking_iteration:
     else:
         strategy_min = 'n_stars'
 
+    # Computes Wilcoxon test between the smart strategy and the closest strategy
+    if abs(mean_binpacking - mean_smart) < abs(mean_n_stars - mean_smart):
+        closest_data = df_binpacking_iteration_execution['time'].values
+    else:
+        closest_data = df_n_stars_iteration_execution['time'].values
+
+    _, p_value = wilcoxon(df_smart_iteration_execution['time'].values, closest_data)
+
+    # Generates a symbol '=' if the p-value is greater than 0.05, otherwise generates a symbol '+'/'-' depending on
+    # the strategy with the minimum mean
+    if p_value > 0.05:
+        symbol = '='
+    else:
+        if strategy_min == 'smart':
+            symbol = '+'
+        else:
+            symbol = '-'
+
     # Appends the data to the result dataframe
     df_result[f'mean_n_stars_{data_type}'].append(mean_n_stars)
     df_result[f'std_n_stars_{data_type}'].append(std_n_stars)
     df_result[f'mean_binpacking_{data_type}'].append(mean_binpacking)
     df_result[f'std_binpacking_{data_type}'].append(std_binpacking)
-    df_result[f'mean_smart_{data_type}'].append(mean_smart)
+    df_result[f'mean_smart_{data_type}'].append(f'{mean_smart} ({symbol})')
     df_result[f'std_smart_{data_type}'].append(std_smart)
     df_result[f'strategy_min_{data_type}'].append(strategy_min)
+
+
+def __get_dtype(key: str) -> type:
+    if key == 'iteration':
+        return int
+
+    if key in ['mean_smart_execution', 'mean_smart_idle', 'strategy_min_execution', 'strategy_min_idle']:
+        return str
+
+    return float
 
 
 def main(random_seed: int):
@@ -43,18 +72,18 @@ def main(random_seed: int):
     df_result = {
         'iteration': [],
         'mean_n_stars_execution': [],
-        'std_n_stars_execution': [],
         'mean_binpacking_execution': [],
-        'std_binpacking_execution': [],
         'mean_smart_execution': [],
+        'std_n_stars_execution': [],
+        'std_binpacking_execution': [],
         'std_smart_execution': [],
-        'mean_n_stars_idle': [],
-        'std_n_stars_idle': [],
-        'mean_binpacking_idle': [],
-        'std_binpacking_idle': [],
-        'mean_smart_idle': [],
-        'std_smart_idle': [],
         'strategy_min_execution': [],
+        'mean_n_stars_idle': [],
+        'mean_binpacking_idle': [],
+        'mean_smart_idle': [],
+        'std_n_stars_idle': [],
+        'std_binpacking_idle': [],
+        'std_smart_idle': [],
         'strategy_min_idle': [],
     }
 
@@ -72,6 +101,7 @@ def main(random_seed: int):
         __get_time_type(df_n_stars_iteration, df_binpacking_iteration, df_smart_iteration, df_result, 'idle')
 
     # Creates the dataframe with the results
+    df_result = {k: pd.Series(v, dtype=__get_dtype(k)) for k, v in df_result.items()}
     df_result = pd.DataFrame(df_result)
     print(df_result)
 
@@ -84,3 +114,5 @@ if __name__ == '__main__':
         print(f'Random seed: {random_seed_to_test}')
         print('====================================')
         main(random_seed=random_seed_to_test)
+
+        break  # To just test one random seed

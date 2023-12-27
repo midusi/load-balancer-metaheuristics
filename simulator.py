@@ -34,13 +34,13 @@ PartitionStrategy = Literal['n_stars', 'binpacking', 'smart']
 STRATEGY: Final[PartitionStrategy] = 'smart'
 
 # If true, adds a delay to worker number 2
-ADD_DELAY_TO_WORKER_2: Final[bool] = True
+ADD_DELAY_TO_WORKERS: Final[bool] = True
 # ADD_DELAY_TO_WORKER_2: Final[bool] = False
 
 # Some constants
-N_WORKERS: Final = 3
-N_STARS: Final = 30
-N_FEATURES: Final = 90
+N_WORKERS: Final = 30
+N_STARS: Final = 300
+N_FEATURES: Final = 20000
 ITERATIONS: Final = 30
 
 # To print useful information
@@ -470,10 +470,18 @@ def main(strategy: PartitionStrategy, random_seed: Optional[int] = None):
             print(rdds)
 
         # Generates a dict with the worker identifier as key and the delay to apply in every execution as value
-        if ADD_DELAY_TO_WORKER_2:
-            delay_for_worker: Optional[DelayForWorker] = {
-                __get_worker_id(2): 1.40,
-            }
+        if ADD_DELAY_TO_WORKERS:
+            # Selects 10 workers to apply a delay
+            if random_seed:
+                np.random.seed(random_seed)
+            workers_to_delay = np.random.choice(range(N_WORKERS), 10, replace=False)
+
+            delay_for_worker: Optional[DelayForWorker] = {}
+            for worker_id in workers_to_delay:
+                if random_seed:
+                    np.random.seed(random_seed * (worker_id + 1))
+
+                delay_for_worker[__get_worker_id(worker_id)] = np.random.uniform(1.1, 1.75)  # 10% to 75% of delay
         else:
             delay_for_worker = None
 
@@ -510,6 +518,8 @@ if __name__ == '__main__':
             print(f'Strategy: {strategy_to_test} | Random seed: {random_seed_to_test}')
             print('====================================')
             main(strategy=strategy_to_test, random_seed=random_seed_to_test)
+
+        break  # To just test one random seed
 
     # Shows the bar charts
     if PLOT_IMAGES:
