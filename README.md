@@ -101,6 +101,11 @@ En el archivo `plot_experiments.py` está el código que toma los datos en JSON 
 
 En el archivo `bin_packing.py` se encuentra un ejemplo de prueba de como funciona el algoritmo Binpacking para la distribución equitativa entre workers de Spark considerando un supuesto tiempo de ejecución. Y en `binpacking_with_load_balancing.py` se realiza una prueba de concepto aplicando el algoritmo multiple knapsack para distribuir equitativamente la carga de trabajo entre diferentes workers aplicando delays aleatorios durente las diferentes iteraciones.
 
+En la carpeta `paper_load_balancing` también se podrán encontrar todos los resultados agrupados en un Excel por cada uno de los experimentos. Dichos resultados consisten en:
+  - Una hoja con los resultados de tiempos de ejecución. Detallando media, desvío estandar por cada estrategia de ejecución. Y el mínimo valor entre todas. Además, se incluye un gráfico de barras para una comparación visual.
+  - Una hoja con la misma estructura que el punto anterior pero con los resultados de tiempo ociosos de los workers del clúster.
+  - Una hoja con los datos de predicción de tiempos y el tiempo real, junto con gráficos comparativos entre ambos tiempos para cada uno de los tres modelos predictivos a evaluar.
+
 En el archivo `simulator.py` se encuentra el desarrollo del simulador de balanceo de carga de Spark: simula la delegación de las particiones a un nodo específico para poder demostrar las ventajas de la carrera de doctorado. En el archivo `simulator_data_summary.py` utiliza todos los resultados del `simulator.py` para armar un summary general que compare las 3 estrategias y defina cuál fue la mejor para cada una de las iteraciones. Dichos resultados se almacenan en la carpeta `Results/simulator_results`.
 
 Para conocer más sobre los modelos SVM Survival o Random Survival Forest leer el blog de [Scikit-survival][scikit-survival-blog].
