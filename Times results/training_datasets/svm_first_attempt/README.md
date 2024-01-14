@@ -1,3 +1,3 @@
-## Explicación
+## Explanation
 
-Esta carpeta contiene los JSONs de los experimentos corridos con RBTree (con los kernels _linear_, _poly_ y _rbf_) y el dataset _Breast_Invasive_Carcinoma_.
+This folder contains the JSONs of the experiments run with RBTree (with the _linear_, _poly_ and _rbf_ kernels) and the _Breast_Invasive_Carcinoma_ dataset.

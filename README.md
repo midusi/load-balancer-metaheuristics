@@ -1,165 +1,135 @@
-# Paper
+# Optimizing Feature Selection in Breast and Renal cancer through Load Balancing in Apache Spark cluster using Machine Learning techniques
 
-## Introducción
+## Introduction
 
-Lo desarrollado acá buscan implementar los algoritmos definidos en los siguientes papers:
-- [Binary black hole algorithm for feature selection and classification on biological data](https://www.sciencedirect.com/science/article/abs/pii/S1568494617301242?via%3Dihub): la metaheurística en sí misma. 
-- [Improved black hole and multiverse algorithms for discrete sizing optimization of planar structures](https://www.tandfonline.com/doi/full/10.1080/0305215X.2018.1540697): el paper que tunea un poco al algoritmo.
+This repository contains the code, data and experimental results of the paper _Optimizing Feature Selection in Breast and Renal cancer through Load Balancing in Apache Spark cluster using Machine Learning techniques_. <!-- TODO: add link when published -->
 
-**Papers que podrían ser útiles:**
-
-- [A Parallel Random Forest Algorithm for Big Data in a Spark Cloud Computing Environment](https://arxiv.org/abs/1810.07748): implementación de un Random Forest en Spark. **Útil ya que el Random Forest que viene con Spark parece ser lentísimo.**
-- [A Multi Dynamic Binary Black Hole Algorithm Applied to Set Covering Problem](https://link.springer.com/chapter/10.1007%2F978-981-10-3728-3_6): implementación de una variante del algoritmo en Spark. **IMPORTANTE:** lo que tiene este paper es que distribuye el algoritmo de BH pero no los modelos. Es decir, distribuyen lo menos costoso cuando nosotros buscamos paralelizar la parte de los modelos que arrojan la métrica a optimizar. Por ende, este paper no nos sería muy útil, quizás para un cita en la sección del estado del arte.
-
-
-## Instalación 
-
-Para correr el código hay que instalar las dependencias:
-
-1. Crear un virtual env: `python3 -m venv venv` (una única vez).
-2. Activar el virtual env: `source venv/bin/activate` (solo cuando se utilice)
-    1. Para salir del virtual env ejecutar: `deactivate`
-3. Instalar las dependencias: `pip install -r requirements.txt`
+The replicated metaheuristic is the _Binary Black Hole Algorithm_ in its two versions:
+- [Binary black hole algorithm for feature selection and classification on biological data](https://www.sciencedirect.com/science/article/abs/pii/S1568494617301242?via%3Dihub)
+- [Improved black hole and multiverse algorithms for discrete sizing optimization of planar structures](https://www.tandfonline.com/doi/full/10.1080/0305215X.2018.1540697)
 
 
 ## Datasets
 
-Los datasets utilizados son:
+The datasets used are:
 
 - [Breast Invasive Carcinoma (TCGA, PanCancer Atlas)][breast-dataset]
   - Samples: 1082
   - Genes: 19727
-  - Objetivo: entrenamiento de tiempos
 - [Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)][renal-dataset]
   - Samples: 282
   - Genes: 19291
-  - Objetivo: entrenamiento de tiempos
 - [Lung Adenocarcinoma (TCGA, PanCancer Atlas)][lung-dataset]
   - Samples: 501
   - Genes: 19293
-  - Objetivo: utilizar como datos de testing en pruebas reales con los modelos ya entrenados por los otros datasets de entrenamiento de tiempos
 
-Se pueden descargar los archivos ya listos para utilizar desde esta carpeta en [Drive][datasets-drive]
-Todos pueden encontrarse listados en [la página de datasets de cBioPortal][cbioportal-datasets]). Los archivos requeridos son `data_clinical_patient.txt` y `data_mrna_seq_v2_rsem_zscores_ref_normal_samples.txt`, y deben ponerse en las respectivas carpetas dentro de `Datasets`.
-
-
-## Modelos, datos de entrenamiento y Load Balancer
+Ready-to-use files can be downloaded from this folder at [Drive][datasets-drive].
+All can be found listed on [the cBioPortal datasets page][cbioportal-datasets]. The required files are `data_clinical_patient.txt` y `data_mrna_seq_v2_rsem_zscores_ref_normal_samples.txt`, and should be placed in the respective folders within `Datasets`.
 
 
-### Modelos
+## Models, training data and Load Balancer models
 
-Los modelos utilizados son los siguientes:
+### Survival inference models
 
-- **SVM Survival** ([source en Scikit-Surv][svm-surv-source]): se utiliza para tareas de Ranking y Regression.
-- **RF Survival** ([source en Scikit-Surv][rf-surv-source]): se utiliza para tareas de Regression. Pero anda lentísimo
-- **Clustering + Cox Regression**: se utilizan diferentes [algoritmos de clustering][group-source] para agrupar por expresión y después se obtiene el C-Index/Log-Likelihood a través de [Cox Regression][cox-source] para evaluar que tan diferentes son los grupos de pacientes.
+The models used for survival forecast inference are as follows:
 
-
-### Datos de entrenamiento de Load balancer
-
-Para entrenar a los Load Balancers para cada uno de los modelos mencionados arriba se utilizan los datos de la carpeta `LoadBalancerDatasets`. Hay dos tipos de archivos:
-
-- Los archivos [ClusteringTimesRecord-2023-08-18.csv](LoadBalancerDatasets%2FClusteringTimesRecord-2023-08-18.csv), 
-[RFTimesRecord-2023-08-18.csv](LoadBalancerDatasets%2FRFTimesRecord-2023-08-18.csv), y
-[SVMTimesRecord-2023-08-18.csv](LoadBalancerDatasets%2FSVMTimesRecord-2023-08-18.csv): son datasets con datos que se obtuvieron de experimentos ejecutados en Multiomix.
-- [ClusteringTimesRecord_full-2023-10-24.csv](LoadBalancerDatasets%2FClusteringTimesRecord_full-2023-10-24.csv), y
-[SVMTimesRecord_full-2023-10-24.csv](LoadBalancerDatasets%2FSVMTimesRecord_full-2023-10-24.csv): estos datos fueron obtenidos a partir de los experimentos realizados en la carpeta `paper_load_balancing`. Para obtener los datos de entrenamiento de los modelos se debe ejecutar el script `generate_full_and_overfitting_train_file.py` (con parámetro `SAVE_FULL_MODEL = True`). Estos datasets **también** incluyen los datos extraídos de Multiomix mencionados arriba. Estos conjuntos se utilizan para demostrar que si entrenamos a los LoadBalancers con más datos y más acordes a los tiempos obtenidos en el cluster local de Spark (y no de AWS como los que se obtuvieron desde Multiomix), los resultados son mejores.
-- [ClusteringTimesRecord_overfitting-2023-10-24.csv](LoadBalancerDatasets%2FClusteringTimesRecord_overfitting-2023-10-24.csv), y
-[SVMTimesRecord_overfitting-2023-10-24.csv](LoadBalancerDatasets%2FSVMTimesRecord_overfitting-2023-10-24.csv): estos datos fueron obtenidos **únicamente** a partir de los experimentos realizados en la carpeta `paper_load_balancing`. Para obtener los datos de entrenamiento de los modelos se debe ejecutar el script `generate_full_and_overfitting_train_file.py` (con parámetro `SAVE_FULL_MODEL = False`). **No incluyen los datos extraídos de Multiomix mencionados arriba.**
+- **SVM Survival** ([source en Scikit-Surv][svm-surv-source]).
+- **RF Survival** ([source en Scikit-Surv][rf-surv-source]).
+- **[Clustering][clustering-source] + [Cox Regression][cox-source]**.
 
 
-### Modelos de Load Balancer
+### Load balancer training data
 
-Los modelos de Load Balancer se encuentran en la carpeta `Trained_models`. Los modelos se entrenan con los datos de entrenamiento mencionados arriba. Los modelos se guardan en la carpeta `Trained_models/<model>` donde `<model>` es el nombre del modelo para el cual fue entrenado.
+To train the Load Balancers for each of the models mentioned above, the data in the `LoadBalancerDatasets` folder is used. There are two types of files:
 
-El entrenamiento de todos estos modelos se realizan en el script `load_balancer_model.py`. Los modelos se entrenan con los parámetros obtenidos en el script `grid_search_params.py`.
-
-Si tienen el sufijo `_full` es porque fueron entrenados con los datos [ClusteringTimesRecord_full-2023-10-24.csv](LoadBalancerDatasets%2FClusteringTimesRecord_full-2023-10-24.csv), y
-[SVMTimesRecord_full-2023-10-24.csv](LoadBalancerDatasets%2FSVMTimesRecord_full-2023-10-24.csv). Si tiene el sufijo `_overfitting` es porque fueron entrenados con los datos [ClusteringTimesRecord_overfitting-2023-10-24.csv](LoadBalancerDatasets%2FClusteringTimesRecord_overfitting-2023-10-24.csv), y [SVMTimesRecord_overfitting-2023-10-24.csv](LoadBalancerDatasets%2FSVMTimesRecord_overfitting-2023-10-24.csv). 
-Si no los tienen entonces los modelos fueron entrenados solo con la información extraída de Multiomix (menos datos).
-
-
-## Organización del código
-
-El código principal está en el archivo `core.py` donde se ejecuta la metaheurística y se informan y guardan los resultados en un archivo CSV que irá a parar a la carpeta `Results`. En `main.py` se definen las funciones y parámetros que se pasa al `core` para ejecutar.  De esta manera se pueden correr los experimetos secuenciales (Python plano) y los desarrollados en un entorno Spark de manera limpia ya que ambos enfoques comparten el pre-procesamiento, las corridas independientes y el algoritmo de la metaheurística. Además, cambiando el parámetro `RUN_TIMES_EXPERIMENT` a `True` se ejecuta el código para evaluar cuánto tarda la ejecución utilizando diferentes cantidades de features. En `plot_times.py` se encuentra el código para graficar dichos tiempos utilizando el archivo JSON generado durante el experimento.
-
-En el archivo `utils.py` se encuentran las funciones de importación, de  binarización de la columna del label del dataset, de preprocesamiento, entre otras funciones útiles.
-
-El algoritmo de la metaheurística y sus variantes se pueden encontrar en el archivo `metaheuristics.py`.
-
-El archivo `memory_leak.py` contiene un benchmark con dos soluciones al memory leak producido en Spark durante el llamado a funciones dentro de un mapPartition. Tanto el problema como la solución están bien explicados en esta pregunta de [Stack Overflow][so-memory-leak].
-
-En el archivo `cross_validation_experiments.py` se lleva a cabo una serie de experimentos con el CrossValidation y los modelos Survival-SVM. Esto permite entender un poco mejor el funcionamiento de los parámetros. La motivación de este archivo nace de encontrarse con un fitness decreciente tanto para training como para testing a medida que el número de parámetros aumentaba (independientemente del kernel que se utilizaba para el modelo SVM).
-
-En el archivo `grid_search_params.py` se lleva a cabo experimentos con GridSearch para obtener los mejores parámetros de algunos modelos que serán entrenados en el archivo `load_balancer_model.py`. Los resultados obtenidos durante la ejecución de este experimento se encuentran en el archivo `All models metrics (grid_search).txt`.
-
-En el archivo `load_balancer_model.py` se llevan a cabo los experimentos de entrenamiento de diferentes modelos para predecir el tiempo de ejecucion a partir de los archivos CSV contenidos en la carpeta `LoadBalancerDatasets`. Los parámetros utilizados para entrenar los modelos son los obtenidos a partir de los experimentos llevados a cabo en `grid_search_params.py`.
-
-El archivo `generate_full_train_file.py` contiene un script para recorrer todos los experimentos realizados (que se encuentran en la carpeta `paper_load_balancing`) y generar un archivo CSV con todos los datos de entrenamiento para los modelos de load balancing. Estos datos extraídos se concatenan con los archivos de entrenamiento que se encuentran en la carpeta `LoadBalancerDatasets`.
-
-En el archivo `plot_experiments.py` está el código que toma los datos en JSON de los experimentos lanzados desde `main.py` para realizar comparaciones entre los datos de diferentes experimentos (con y sin load balancer, por ejemplo).
-
-En el archivo `bin_packing.py` se encuentra un ejemplo de prueba de como funciona el algoritmo Binpacking para la distribución equitativa entre workers de Spark considerando un supuesto tiempo de ejecución. Y en `binpacking_with_load_balancing.py` se realiza una prueba de concepto aplicando el algoritmo multiple knapsack para distribuir equitativamente la carga de trabajo entre diferentes workers aplicando delays aleatorios durente las diferentes iteraciones.
-
-En la carpeta `paper_load_balancing` también se podrán encontrar todos los resultados agrupados en un Excel por cada uno de los experimentos. Dichos resultados consisten en:
-  - Una hoja con los resultados de tiempos de ejecución. Detallando media, desvío estandar por cada estrategia de ejecución. Y el mínimo valor entre todas. Además, se incluye un gráfico de barras para una comparación visual.
-  - Una hoja con la misma estructura que el punto anterior pero con los resultados de tiempo ociosos de los workers del clúster.
-  - Una hoja con los datos de predicción de tiempos y el tiempo real, junto con gráficos comparativos entre ambos tiempos para cada uno de los tres modelos predictivos a evaluar.
-
-En el archivo `simulator.py` se encuentra el desarrollo del simulador de balanceo de carga de Spark: simula la delegación de las particiones a un nodo específico para poder demostrar las ventajas de la carrera de doctorado. En el archivo `simulator_data_summary.py` utiliza todos los resultados del `simulator.py` para armar un summary general que compare las 3 estrategias y defina cuál fue la mejor para cada una de las iteraciones. Dichos resultados se almacenan en la carpeta `Results/simulator_results`.
-
-Para conocer más sobre los modelos SVM Survival o Random Survival Forest leer el blog de [Scikit-survival][scikit-survival-blog].
+- Files [ClusteringTimesRecord-2023-08-18.csv](LoadBalancerDatasets%2FClusteringTimesRecord-2023-08-18.csv), 
+[RFTimesRecord-2023-08-18.csv](LoadBalancerDatasets%2FRFTimesRecord-2023-08-18.csv), and
+[SVMTimesRecord-2023-08-18.csv](LoadBalancerDatasets%2FSVMTimesRecord-2023-08-18.csv): are datasets with data obtained from experiments run in Multiomix on AWS.
+- [ClusteringTimesRecord_full-2023-10-24.csv](LoadBalancerDatasets%2FClusteringTimesRecord_full-2023-10-24.csv), and
+[SVMTimesRecord_full-2023-10-24.csv](LoadBalancerDatasets%2FSVMTimesRecord_full-2023-10-24.csv): these data were obtained from the experiments performed in the `paper_load_balancing` folder. To obtain the training data from the models, the script `generate_full_and_overfitting_train_file.py` (with parameter `SAVE_FULL_MODEL = True`) must be run. These datasets **also** include the data extracted from Multiomix mentioned above. These datasets are used to demonstrate that if we train the LoadBalancers with more data and more in line with the times obtained from the local Spark cluster (and not from AWS as obtained from Multiomix), the results are better.
+- [ClusteringTimesRecord_overfitting-2023-10-24.csv](LoadBalancerDatasets%2FClusteringTimesRecord_overfitting-2023-10-24.csv), and
+[SVMTimesRecord_overfitting-2023-10-24.csv](LoadBalancerDatasets%2FSVMTimesRecord_overfitting-2023-10-24.csv): these data were obtained **only** from the experiments performed in the `paper_load_balancing` folder. To obtain the training data from the models, the script `generate_full_and_overfitting_train_file.py` (with parameter `SAVE_FULL_MODEL = False`) must be run. **The data extracted from Multiomix mentioned above are not included.
 
 
-## Explicación de los campos de los archivos JSON
+### Load Balancer trained models
 
-En cada corrida de experimentos se genera un archivo JSON. A continuación se listan los campos con sus explicaciones:
+Load Balancer models are located in the `Trained_models` folder. The models are trained with the training data mentioned above. The models are stored in the `Trained_models/<model>` folder where `<model>` is the name of the model for which it was trained.
 
-**NOTA: todos los valores que son arreglos se encuentran ordenados por posición. Es decir, el primer elemento de _number_of_features_, _execution_times_, _predicted_execution_times_, _fitness_, _times_by_iteration_ (entre otros) están relacionados. Algunos valores son escalares o tienen otra estructura.**
+The training of all these models is performed in the `load_balancer_model.py` script. The models are trained with the parameters obtained in the `grid_search_params.py` script.
 
-- **number_of_features**: número de features utilizados para obtener el valor de fitness (ya sea utilizando CV con SVM o RF, o Clustering + Cox Regression).
-- **execution_times**: tiempo (en segundos) que tomó obtener el valor de fitness con el _number_of_features_.
-- **predicted_execution_times**: _execution_times_ predicho por el load balancer. 
-- **fitness**: valor de fitness obtenido durante el proceso de CV con SVM o RF, o Clustering + Cox Regression.
-- **times_by_iteration**: tiempo (en segundos) que llevó cada iteración del SVM. Si no se utiliza dicho modelo el valor es 0.0. El nombre puede ser confuso pero lo dejamos así por temas de retrocompatibilidad.
-- **test_times**: tiempo (en segundos) que llevó durante el testing durante el proceso de CV con SVM o RF. Si se utiliza Clustering + Cox Regression el valor es 0.0.
-- **train_scores**: valores de fitness obtenidos con los datos de entrenamiento durante el proceso de CV con SVM o RF. Si se utiliza Clustering + Cox Regression el valor es 0.0. 
-- **number_of_iterations**: número de iteraciones de SVM que llevó para converger dicho modelo durante el proceso de CV. Si no se utiliza dicho modelo el valor es 0.0. El nombre puede ser confuso pero lo dejamos así por temas de retrocompatibilidad.
-- **hosts**: nombre de los Workers de Spark que fueron los encargados de computar.
-- **workers_idle_times**: diccionario con los nombres de los Workers (_hosts_) como clave y los valores de promedio y desvío estandar de los tiempos ociosos (en segundos) de dicho worker en toda la corrida de la metaheurística. El tiempo ocioso de un Worker se calcula como la diferencia entre la suma de los tiempos de ejecución y lo que esperó el master en obtener la respuesta (tiempo transcurrido entre la distribución de datos en el cluster hasta hacer el collect()).
-- **workers_idle_times_per_iteration**: diccionario con los nombres de los Workers (_hosts_) como clave. El valor de cada clave es una lista con una tupla de dos elementos: la iteración de la metaheurística (no confundir con una corrida independiente) y el tiempo ocioso (en segundos) de ese Worker en dicha iteración. **Nótese que acá podría haber problemas si en alguna iteración un Worker no recibe estrellas, ya que ahí no se puede obtener ni el nombre del host, ni el tiempo que demoró, por lo que no sería incluído en este diccionario. En un contexto óptimo, donde cada worker recibe al menos una estrella para computar, este diccionario debería tener por cada Worker una lista con tantos elementos como iteraciones se hayan configurado para el BBHA.**
-- **workers_execution_times_per_iteration**: diccionario con los nombres de los Workers (_hosts_) como clave. El valor de cada clave es una lista con una tupla de dos elementos: la iteración de la metaheurística (no confundir con una corrida independiente) y el tiempo de ejecución (en segundos) que le llevó a ese Worker en dicha iteración computar todas las estrellas asignadas. **Nótese que acá podría haber problemas si en alguna iteración un Worker no recibe estrellas, ya que ahí no se puede obtener ni el nombre del host, ni el tiempo que demoró, por lo que no sería incluído en este diccionario. En un contexto óptimo, donde cada worker recibe al menos una estrella para computar, este diccionario debería tener por cada Worker una lista con tantos elementos como iteraciones se hayan configurado para el BBHA.**
-- **partition_ids**: ID de partición que se asignó a la estrella que computó estos features.
-- **model**: modelo utilizado. Puede ser `svm`, `rf`, `clustering`. 
-- **dataset**: dataset utilizado. Puede ser `Breast_Invasive_Carcinoma`, `Kidney_Renal_Papillary_Cell_Carcinoma`, `Lung_Adenocarcinoma`.
-- **parameters**: un string con los parámetros del modelo utilizado.
-- **number_of_samples**: número de pacientes que contiene el dataset.
-- **independent_iteration_time**: tiempo (en segundos) que llevó el proceso completo (también conocido como _Corrida independiente_).
+If it has the `_full` suffix is because they were trained with the files [ClusteringTimesRecord_full-2023-10-24.csv](LoadBalancerDatasets%2FClusteringTimesRecord_full-2023-10-24.csv), and
+[SVMTimesRecord_full-2023-10-24.csv](LoadBalancerDatasets%2FSVMTimesRecord_full-2023-10-24.csv). If it has the `_overfitting` is because they were trained with the files [ClusteringTimesRecord_overfitting-2023-10-24.csv](LoadBalancerDatasets%2FClusteringTimesRecord_overfitting-2023-10-24.csv), y [SVMTimesRecord_overfitting-2023-10-24.csv](LoadBalancerDatasets%2FSVMTimesRecord_overfitting-2023-10-24.csv). 
+If they do not have them then the models were trained only with the information extracted from Multiomix in AWS (fewer data).
 
 
-## Ejecución de scripts
+## Code structure
 
-Spark tiene problemas con la importación de modulos definidos por el usuario, por lo que se deja un archivo llamado `scripts.zip` que contiene todos los modulos necesarios. Ahora solo hay que correr los siguientes comandos para que funcione todo:
+The main code is in the `core.py` file where the metaheuristic is executed and the results are reported and saved in a CSV file that will go to the `Results` folder. In `main.py` you define the functions and parameters that you pass to `core` to execute.  This way you can run sequential experiments (plain Python) and those developed in a Spark environment in a clean way since both approaches share the pre-processing, the independent runs and the metaheuristic algorithm. In addition, changing the `RUN_TIMES_EXPERIMENT` parameter to `True` runs the code to evaluate how long the execution takes using different amounts of features. In `plot_times.py` is the code to plot these times using the JSON file generated during the experiment.
 
-1. Configurar todo en el `main.py` con los parámetros a ejecutar.
-2. Estando fuera del cluster ejecutar para poder utilizar los modulos de Python: `./zip_modules.sh`
-3. Estando dentro del Master del cluster: `spark-submit --py-files scripts.zip main.py`
+The `utils.py` file contains import functions, dataset label column binarization, preprocessing, among other useful functions.
 
-Si falla diciendo que no existe la carpeta `spark-logs` hay que correr el comando desde el master `hdfs dfs -mkdir /spark-logs`.
+The metaheuristics algorithm and its variants can be found in the `metaheuristics.py` file.
+
+The `memory_leak.py` file contains a benchmark with two solutions to the memory leak produced in Spark during function calls inside a mapPartition. Both the problem and the solution are well explained in this [Stack Overflow question][so-memory-leak].
+
+In the `cross_validation_experiments.py` file a series of experiments with the CrossValidation and Survival-SVM models are carried out. This allows to understand a little better how the parameters work. The motivation for this file stems from encountering decreasing fitness for both training and testing as the number of parameters increased (regardless of the kernel used for the SVM model).
+
+In the `grid_search_params.py` file, experiments with GridSearch are carried out to obtain the best parameters of some models that will be trained in the `load_balancer_model.py` file. The results obtained during the execution of this experiment can be found in the file `All models metrics (grid_search).txt`.
+
+In the `load_balancer_model.py` file the training experiments of different models to predict the execution time from the CSV files contained in the `LoadBalancerDatasets` folder are carried out. The parameters used to train the models are those obtained from the experiments carried out in `grid_search_params.py`.
+
+The `generate_full_train_file.py` file contains a script to run through all the experiments performed (found in the `paper_load_balancing` folder) and generate a CSV file with all the training data for the load balancing models. This extracted data is concatenated with the training files found in the `LoadBalancerDatasets` folder.
+
+In the `plot_experiments.py` file is the code that takes the JSON data of the experiments launched from `main.py` to make comparisons between the data of different experiments (with and without load balancer, for example).
+
+In the file `bin_packing.py` you can find a test example of how the Binpacking algorithm works for the equal distribution between Spark workers considering an assumed execution time. And in `binpacking_with_load_balancing.py` is a proof of concept applying the multiple knapsack algorithm to distribute equally the workload among different workers applying random delays during the different iterations.
+
+In the `paper_load_balancing` folder you can also find all the results grouped in an Excel file for each of the experiments. These results consist of:
+  - A sheet with the results of execution times. Detailing mean, standard deviation for each execution strategy. And the minimum value among all. In addition, a bar chart is included for visual comparison.
+  - A sheet file with the same structure as the previous point but with the idle time results of the cluster workers.
+  - A sheet with the predicted time data and the actual time, together with comparative graphs between both times for each of the three predictive models to be evaluated.
+
+The `simulator.py` file contains the development of the Spark load balancing simulator: it simulates the delegation of partitions to a specific node in order to demonstrate the advantages of the PhD race. In the `simulator_data_summary.py` file, it uses all the results of the `simulator.py` to build an overall summary that compares the 3 strategies and defines which one was the best for each of the iterations. These results are stored in the `Results/simulator_results` folder.
+
+To learn more about the SVM Survival or Random Survival Forest models read the  [Scikit-survival blog][scikit-survival-blog].
 
 
-## Como manejar los resultados
+## Explanation of JSON file fields
 
-Para organizar todos los resultados se realizan los siguientes pasos:
+A JSON file is generated for each experiment run. The fields and their explanations are listed below:
 
-1. Correr el script direccionando tanto el stderr como el stdout a un archivo. Por ejemplo: `spark-submit --py-files scripts.zip main.py &> logs_my_script.txt`. Cuando termine tanto el script secuencial como el de Spark, quedará en la carpeta `Results` un `.csv` con el datetime exacto en el que se corrió el script con todos los resultados obtenidos.
-2. Poner el `logs_my_script.txt` junto con un el `.csv` generado en la carpeta `Results/results_to_push/[datetime]/` (se debe crear manualmente esa carpeta).
-    1. Opcional: renombrar el `.txt` para que también tenga el datetime. De esa forma deberían quedar dos archivos `[datetime].csv` y `[datetime].txt` en la carpeta `[datetime]`
-3. Crear un `README.txt` que contenga información sobre el experimento, como:
-    - Si es secuencial o se lanzó en un cluster Spark.
-    - Si se usaron parámetros personalizados o se dejó todo por defecto.
-    - Cualquier otro dato que se considere útil para el paper.
-4. Pushear ambos archivos!
+**NOTE: all values that are arrays are sorted by position. That is, the first element of _number_of_features_, _execution_times_, _predicted_execution_times_, _fitness_, _times_by_iteration_ (among others) are related. Some values are scalar or have another structure.**
+
+- **number_of_features**: number of features used to obtain the fitness value (either using CV with SVM or RF, or Clustering + Cox Regression).
+- **execution_times**: time (in seconds) it took to get the fitness value with the _number_of_features_.
+- **predicted_execution_times**: _execution_times_ predicted by the load balancer.
+- **fitness**: fitness value obtained during the CV process with SVM or RF, or Clustering + Cox Regression.
+- **times_by_iteration**: time (in seconds) that each iteration of the SVM took. If no such model is used the value is 0.0. The name may be confusing, but we leave it that way for backward compatibility issues.
+- **test_times**: time (in seconds) it took during testing during the CV process with SVM or RF. If Clustering + Cox Regression is used the value is 0.0.
+- **train_scores**: fitness values obtained with the training data during the CV process with SVM or RF. If Clustering + Cox Regression is used the value is 0.0.
+- **number_of_iterations**: number of SVM iterations it took to converge such a model during the VC process. If no such model is used the value is 0.0. The name may be confusing, but we leave it that way for backward compatibility issues.
+- **hosts**: name of the Spark Workers who were in charge of the computation.
+- **workers_idle_times**: dictionary with the names of the Workers (_hosts_) as key and the average and standard deviation values of the idle times (in seconds) of that worker in the whole run of the metaheuristic. The idle time of a Worker is calculated as the difference between the sum of the execution times and the time the master waited to obtain the answer (time elapsed between the distribution of data in the cluster and the collect()).
+- **workers_idle_times_per_iteration**: dictionary with the names of the Workers (_hosts_) as key. The value of each key is a list with a tuple of two elements: the iteration of the metaheuristic (not to be confused with an independent run) and the idle time (in seconds) of that Worker in that iteration. **Note that here there could be problems if in some iteration a Worker does not receive stars, since neither the host name nor the time it took cannot be obtained, so it would not be included in this dictionary. In an optimal context, where each worker receives at least one star to compute, this dictionary should have for each Worker a list with as many elements as iterations have been configured for the BBHA.**
+- **workers_execution_times_per_iteration**: dictionary with the names of the Workers (_hosts_) as key. The value of each key is a list with a tuple of two elements: the iteration of the metaheuristic (not to be confused with an independent run) and the execution time (in seconds) that it took that Worker in that iteration to compute all the assigned stars. **Note that here there could be problems if in some iteration a Worker does not receive stars, since neither the host name nor the time it took cannot be obtained, so it would not be included in this dictionary. In an optimal context, where each worker receives at least one star to compute, this dictionary should have for each Worker a list with as many elements as iterations have been configured for the BBHA.**
+- **partition_ids**: Partition ID that was assigned to the star that computed these features.
+- **model**: model used. It can be `svm`, `rf`, or `clustering`.
+- **dataset**: dataset used. It can be `Breast_Invasive_Carcinoma`, `Kidney_Renal_Papillary_Cell_Carcinoma`, or `Lung_Adenocarcinoma`.
+- **parameters**: a string with the parameters of the model used.
+- **number_of_samples**: number of patients in the dataset.
+- **independent_iteration_time**: time (in seconds) that the entire process took (also known as _Independent Run_).
+
+
+## Script execution
+
+Spark has problems with importing user-defined modules, so we leave a file called `scripts.zip` which contains all the necessary modules. Now just run the following commands to get everything working:
+
+1. Deploy a Spark cluster using [this repository][big-data-swarm]. You may need to install the dependencies defined in `requirements.txt` in the image deployed in the cluster.
+1. Configure everything in the `main.py` with the parameters to execute.
+1. Out of the cluster run to be able to use the Python modules: `./zip_modules.sh`.
+1. Inside the Cluster Master run: `spark-submit --py-files scripts.zip main.py`.
+
+**NOTE**: if it fails saying that the `spark-logs` folder does not exist, run the command from the master `hdfs dfs -mkdir /spark-logs`.
 
 
 [scikit-survival-blog]: https://scikit-survival.readthedocs.io/en/stable/user_guide/understanding_predictions.html
@@ -171,5 +141,6 @@ Para organizar todos los resultados se realizan los siguientes pasos:
 [so-memory-leak]: https://stackoverflow.com/questions/53105508/pyspark-numpy-memory-not-being-released-in-executor-map-partition-function-mem/71700592#71700592
 [svm-surv-source]: https://scikit-survival.readthedocs.io/en/stable/user_guide/survival-svm.html
 [rf-surv-source]: https://scikit-survival.readthedocs.io/en/stable/user_guide/random-survival-forest.html
-[group-source]: https://scikit-learn.org/stable/modules/clustering.html
+[clustering-source]: https://scikit-learn.org/stable/modules/clustering.html
 [cox-source]: https://lifelines.readthedocs.io/en/latest/Quickstart.html?highlight=cox%20regression#survival-regression
+[big-data-swarm]: https://github.com/jware-solutions/docker-big-data-cluster
