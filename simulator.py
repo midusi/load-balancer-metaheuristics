@@ -79,7 +79,8 @@ class Rdd:
 
 
 def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker, strategy: PartitionStrategy,
-            delay_for_worker: Optional[DelayForWorker]) -> tuple[WorkerTimes, WorkerIdleTime, DelayForWorker]:
+            delay_for_worker: Optional[DelayForWorker]
+) -> tuple[WorkerTimes, WorkerIdleTime, DelayForWorker, WorkerTimes]:
     """
     Simulates the collect() method of Spark.
     :param rdds: List of RDD to evaluate.
@@ -134,6 +135,7 @@ def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker, strategy: P
     # Stores the idle time for every worker. This is the difference between the max worker time and the sum
     # of the execution times of the worker
     idle_times: WorkerIdleTime = {}
+    sums_times: WorkerIdleTime = {}
 
     delay_percentage: DelayForWorker = {}
     for worker_id in worker_execution_times:
@@ -145,12 +147,13 @@ def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker, strategy: P
 
         idle_time = max_worker_time - worker_sum_time
         idle_times[worker_id] = idle_time
+        sums_times[worker_id] = worker_sum_time
 
         # The delay is the percentage of the execution time of the worker (predicted execution time / execution time).
         # This is useful as we are punishing/rewarding the workers depending on how accurate was the prediction.
         delay_percentage[worker_id] = sum_predictions / worker_sum_time
 
-    return worker_execution_times, idle_times, delay_percentage
+    return worker_execution_times, idle_times, delay_percentage, sums_times
 
 
 def __fitness_function(subset: np.ndarray) -> float:
@@ -405,7 +408,8 @@ def __get_worker_id(worker_id: int) -> str:
     return f'worker_{worker_id}'
 
 
-def __save_data(execution_times_worker: WorkerBarTimes, idle_times_worker: WorkerBarTimes, strategy: PartitionStrategy,
+def __save_data(execution_times_worker: WorkerBarTimes, idle_times_worker: WorkerBarTimes,
+                sum_times_worker: WorkerBarTimes, strategy: PartitionStrategy,
                 random_seed: Optional[int]):
     """Saves the data in a CSV file."""
     data = []
@@ -426,23 +430,28 @@ def __save_data(execution_times_worker: WorkerBarTimes, idle_times_worker: Worke
     for iteration in range(ITERATIONS):
         execution_times = []
         idle_times = []
+        sum_times = []
 
         for worker_id in execution_times_worker:
             execution_times.extend(
                 [x[1] for x in execution_times_worker[worker_id] if x[0] == iteration and x[1] > 0.0])
+
             idle_times.extend([x[1] for x in idle_times_worker[worker_id] if x[0] == iteration and x[1] > 0.0])
+            sum_times.extend([x[1] for x in sum_times_worker[worker_id] if x[0] == iteration and x[1] > 0.0])
 
         data.append([iteration, np.mean(execution_times), np.std(execution_times),
-                     np.mean(idle_times), np.std(idle_times)])
+                     np.mean(idle_times), np.std(idle_times), np.max(sum_times), np.min(sum_times)])
 
     df = pd.DataFrame(data, columns=['iteration', 'mean_execution_time', 'std_execution_time',
-                                     'mean_idle_time', 'std_idle_time'])
+                                     'mean_idle_time', 'std_idle_time', 'max_sum_time', 'min_sum_time'])
+
     df.to_csv(f'Simulator_results/summary_{strategy}_random_{random_seed}.csv', index=False)
 
 
 def main(strategy: PartitionStrategy, random_seed: Optional[int] = None):
     execution_times_worker: WorkerBarTimes = {}
     idle_times_worker: WorkerBarTimes = {}
+    sum_times_worker: WorkerBarTimes = {}
 
     previous_delay_percentage: Optional[DelayForWorker] = None
 
@@ -486,7 +495,7 @@ def main(strategy: PartitionStrategy, random_seed: Optional[int] = None):
             delay_for_worker = None
 
         # Executes the simulation
-        current_execution_times, current_idle_times, previous_delay_percentage = collect(
+        current_execution_times, current_idle_times, previous_delay_percentage, current_sum_times = collect(
             rdds,
             partition_to_worker,
             strategy,
@@ -503,13 +512,14 @@ def main(strategy: PartitionStrategy, random_seed: Optional[int] = None):
         # Adds the data to execution and idle times
         __add_to_worker_dict(current_execution_times, execution_times_worker, iteration)
         __add_to_worker_dict(current_idle_times, idle_times_worker, iteration)
+        __add_to_worker_dict(current_sum_times, sum_times_worker, iteration)
 
     generate_bar_charts(execution_times_worker, f'Strategy = {strategy}', 'Execution')
     generate_bar_charts(idle_times_worker, f'Strategy = {strategy}', 'Idle')
 
     # Generates a CSV with the data
     if SAVE_DATA:
-        __save_data(execution_times_worker, idle_times_worker, strategy, random_seed)
+        __save_data(execution_times_worker, idle_times_worker, sum_times_worker, strategy, random_seed)
 
 
 if __name__ == '__main__':
