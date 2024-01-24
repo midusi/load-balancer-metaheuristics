@@ -364,7 +364,7 @@ def binary_black_hole(
                     logging.info(f'Changing Black hole for star {a},'
                                  f' BH fitness -> {black_hole_fitness} | Star {a} fitness -> {current_fitness}')
                 black_hole_idx = a
-                black_hole_subset, current_star_subset = current_star_subset, black_hole_subset
+                black_hole_subset, current_star_subset = current_star_subset.copy(), black_hole_subset.copy()
                 black_hole_fitness, current_fitness = current_fitness, black_hole_fitness
 
             # If the fitness function was the same, but had fewer features in the star (better!), makes the swap
@@ -374,7 +374,7 @@ def binary_black_hole(
                     logging.info(f'Changing Black hole for star {a},'
                                  f' BH fitness -> {black_hole_fitness} | Star {a} fitness -> {current_fitness}')
                 black_hole_idx = a
-                black_hole_subset, current_star_subset = current_star_subset, black_hole_subset
+                black_hole_subset, current_star_subset = current_star_subset.copy(), black_hole_subset.copy()
                 black_hole_fitness, current_fitness = current_fitness, black_hole_fitness
 
             # Computes the event horizon
@@ -505,7 +505,7 @@ def improved_binary_black_hole(
                     logging.info(f'Changing Black hole for star {a},'
                                  f' BH fitness -> {black_hole_fitness} | Star {a} fitness -> {current_fitness}')
                 black_hole_idx = a
-                black_hole_subset, current_star_subset = current_star_subset, black_hole_subset
+                black_hole_subset, current_star_subset = current_star_subset.copy(), black_hole_subset.copy()
                 black_hole_fitness, current_fitness = current_fitness, black_hole_fitness
 
             # If the fitness function was the same, but had fewer features in the star (better!), makes the swap
@@ -515,7 +515,7 @@ def improved_binary_black_hole(
                     logging.info(f'Changing Black hole for star {a},'
                                  f' BH fitness -> {black_hole_fitness} | Star {a} fitness -> {current_fitness}')
                 black_hole_idx = a
-                black_hole_subset, current_star_subset = current_star_subset, black_hole_subset
+                black_hole_subset, current_star_subset = current_star_subset.copy(), black_hole_subset.copy()
                 black_hole_fitness, current_fitness = current_fitness, black_hole_fitness
 
             # Computes the event horizon
