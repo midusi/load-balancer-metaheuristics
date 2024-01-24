@@ -798,7 +798,7 @@ def binary_black_hole_spark(
                 threshold = binary_threshold if binary_threshold is not None else random.uniform(0, 1)
 
                 if random_state is not None:
-                    np.random.seed(random_state * (d * (star_idx_in_cluster + 2)))
+                    random.seed(random_state * (d * (star_idx_in_cluster + 2)))
                 x_new = x_old + random.uniform(0, 1) * (black_hole_subset[d] - x_old)  # Position
 
                 stars_subsets[a][1][d] = 1 if abs(tanh(x_new)) > threshold else 0
