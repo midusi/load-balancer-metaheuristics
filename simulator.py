@@ -26,7 +26,7 @@ WorkerIdleTime = dict[str, float]
 WorkerBarTimes = dict[str, list[list[float]]]
 
 # Types of strategy to define partitions
-PartitionStrategy = Literal['n_stars', 'binpacking', 'smart']
+PartitionStrategy = Literal['sequential', 'n_stars', 'binpacking', 'smart']
 
 # Strategy to define partitions
 # STRATEGY: Final[PartitionStrategy] = 'n_stars'
@@ -48,7 +48,9 @@ DEBUG: Final = True
 
 # To save data/images
 SAVE_DATA: Final = True
+# SAVE_DATA: Final = False
 SAVE_IMAGES: Final = True
+# SAVE_IMAGES: Final = False
 
 # To plot images
 PLOT_IMAGES: Final = False
@@ -436,7 +438,8 @@ def __save_data(execution_times_worker: WorkerBarTimes, idle_times_worker: Worke
             execution_times.extend(
                 [x[1] for x in execution_times_worker[worker_id] if x[0] == iteration and x[1] > 0.0])
 
-            idle_times.extend([x[1] for x in idle_times_worker[worker_id] if x[0] == iteration and x[1] > 0.0])
+            if strategy != 'sequential':
+                idle_times.extend([x[1] for x in idle_times_worker[worker_id] if x[0] == iteration and x[1] > 0.0])
             sum_times.extend([x[1] for x in sum_times_worker[worker_id] if x[0] == iteration and x[1] > 0.0])
 
         data.append([iteration, np.mean(execution_times), np.std(execution_times),
@@ -467,55 +470,69 @@ def main(strategy: PartitionStrategy, random_seed: Optional[int] = None):
             rdd = Rdd(i, random_features_to_select)
             rdds.append(rdd)
 
-        if DEBUG:
-            print('rdds before assign partitions')
-            print(rdds)
-
         # Assigns the partition to each RDD
-        rdds, partition_to_worker = __assign_partitions(rdds, strategy, random_seed, previous_delay_percentage)
+        if strategy != 'sequential':
+            if DEBUG:
+                print('rdds before assign partitions')
+                print(rdds)
 
-        if DEBUG:
-            print('rdds after assign partitions')
-            print(rdds)
+            rdds, partition_to_worker = __assign_partitions(rdds, strategy, random_seed, previous_delay_percentage)
 
-        # Generates a dict with the worker identifier as key and the delay to apply in every execution as value
-        if ADD_DELAY_TO_WORKERS:
-            # Selects 10 workers to apply a delay
-            if random_seed:
-                np.random.seed(random_seed)
-            workers_to_delay = np.random.choice(range(N_WORKERS), 10, replace=False)
+            if DEBUG:
+                print('rdds after assign partitions')
+                print(rdds)
 
-            delay_for_worker: Optional[DelayForWorker] = {}
-            for worker_id in workers_to_delay:
+            # Generates a dict with the worker identifier as key and the delay to apply in every execution as value
+            if ADD_DELAY_TO_WORKERS:
+                # Selects 10 workers to apply a delay
                 if random_seed:
-                    np.random.seed(random_seed * (worker_id + 1))
+                    np.random.seed(random_seed)
+                workers_to_delay = np.random.choice(range(N_WORKERS), 10, replace=False)
 
-                delay_for_worker[__get_worker_id(worker_id)] = np.random.uniform(1.1, 1.75)  # 10% to 75% of delay
+                delay_for_worker: Optional[DelayForWorker] = {}
+                for worker_id in workers_to_delay:
+                    if random_seed:
+                        np.random.seed(random_seed * (worker_id + 1))
+
+                    delay_for_worker[__get_worker_id(worker_id)] = np.random.uniform(1.1, 1.75)  # 10% to 75% of delay
+            else:
+                delay_for_worker = None
+
+            # Executes the simulation
+            current_execution_times, current_idle_times, previous_delay_percentage, current_sum_times = collect(
+                rdds,
+                partition_to_worker,
+                strategy,
+                delay_for_worker
+            )
+
+            if DEBUG:
+                print(f'worker_execution_times: {current_execution_times}')
+                print(f'idle_times: {current_idle_times}')
+                print(f'previous_delay_percentage: {previous_delay_percentage}')
+                flatten_list = np.concatenate(list(current_execution_times.values())).ravel()
+                print(f'Iteration total time: {sum(flatten_list)}')
+
+            # Adds the data to execution and idle times
+            __add_to_worker_dict(current_execution_times, execution_times_worker, iteration)
+            __add_to_worker_dict(current_idle_times, idle_times_worker, iteration)
+            __add_to_worker_dict(current_sum_times, sum_times_worker, iteration)
         else:
-            delay_for_worker = None
+            # Executes the simulation for the 'sequential' strategy
+            print(rdds)
+            all_execution_times = [__fitness_function(rdd.subset) for rdd in rdds]
+            worker_execution_time = np.sum(all_execution_times)
+            worker_execution_time_dict = {
+                'master': worker_execution_time
+            }
 
-        # Executes the simulation
-        current_execution_times, current_idle_times, previous_delay_percentage, current_sum_times = collect(
-            rdds,
-            partition_to_worker,
-            strategy,
-            delay_for_worker
-        )
-
-        if DEBUG:
-            print(f'worker_execution_times: {current_execution_times}')
-            print(f'idle_times: {current_idle_times}')
-            print(f'previous_delay_percentage: {previous_delay_percentage}')
-            flatten_list = np.concatenate(list(current_execution_times.values())).ravel()
-            print(f'Iteration total time: {sum(flatten_list)}')
-
-        # Adds the data to execution and idle times
-        __add_to_worker_dict(current_execution_times, execution_times_worker, iteration)
-        __add_to_worker_dict(current_idle_times, idle_times_worker, iteration)
-        __add_to_worker_dict(current_sum_times, sum_times_worker, iteration)
+            __add_to_worker_dict(worker_execution_time_dict, execution_times_worker, iteration)
+            __add_to_worker_dict(worker_execution_time_dict, sum_times_worker, iteration)
+            print(f'Execution time: {worker_execution_time}')
 
     generate_bar_charts(execution_times_worker, f'Strategy = {strategy}', 'Execution')
-    generate_bar_charts(idle_times_worker, f'Strategy = {strategy}', 'Idle')
+    if strategy != 'sequential':
+        generate_bar_charts(idle_times_worker, f'Strategy = {strategy}', 'Idle')
 
     # Generates a CSV with the data
     if SAVE_DATA:
@@ -524,7 +541,7 @@ def main(strategy: PartitionStrategy, random_seed: Optional[int] = None):
 
 if __name__ == '__main__':
     for random_seed_to_test in range(100, 1000, 100):
-        for strategy_to_test in ['n_stars', 'binpacking', 'smart']:
+        for strategy_to_test in ['sequential', 'n_stars', 'binpacking', 'smart']:
             print(f'Strategy: {strategy_to_test} | Random seed: {random_seed_to_test}')
             print('====================================')
             main(strategy=strategy_to_test, random_seed=random_seed_to_test)
