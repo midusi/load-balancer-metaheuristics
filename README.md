@@ -1,8 +1,8 @@
-# Optimizing Feature Selection in Breast and Renal cancer through Load Balancing in Apache Spark cluster using Machine Learning techniques
+# PELADO: a Load Balancing Algorithm for Metaheuristics Optimization applied to Biomarker Discovery
 
 ## Introduction
 
-This repository contains the code, data and experimental results of the paper _Optimizing Feature Selection in Breast and Renal cancer through Load Balancing in Apache Spark cluster using Machine Learning techniques_. <!-- TODO: add link when published -->
+This repository contains the code, data and experimental results of the paper _PELADO: a Load Balancing Algorithm for Metaheuristics Optimization applied to Biomarker Discovery_. <!-- TODO: add link when published -->
 
 The replicated metaheuristic is the _Binary Black Hole Algorithm_ in its two versions:
 - [Binary black hole algorithm for feature selection and classification on biological data](https://www.sciencedirect.com/science/article/abs/pii/S1568494617301242?via%3Dihub)
