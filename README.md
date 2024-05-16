@@ -133,7 +133,7 @@ Spark has problems with importing user-defined modules, so we leave a file calle
 
 
 [scikit-survival-blog]: https://scikit-survival.readthedocs.io/en/stable/user_guide/understanding_predictions.html
-[datasets-drive]: https://drive.google.com/drive/folders/1g7DnPkV7MtbLBHrGLWpCnRWV2LRW6v9-?usp=sharing
+[datasets-drive]: https://1drv.ms/f/s!Arl5qt99IiNPthEiG_dPMeCrgoE7?e=T0eBTV
 [breast-dataset]: https://cbioportal-datahub.s3.amazonaws.com/brca_tcga_pan_can_atlas_2018.tar.gz
 [lung-dataset]: https://cbioportal-datahub.s3.amazonaws.com/luad_tcga_pan_can_atlas_2018.tar.gz
 [renal-dataset]: https://cbioportal-datahub.s3.amazonaws.com/kirp_tcga_pan_can_atlas_2018.tar.gz
