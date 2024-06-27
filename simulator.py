@@ -28,29 +28,42 @@ WorkerBarTimes = dict[str, list[list[float]]]
 # Types of strategy to define partitions
 PartitionStrategy = Literal['sequential', 'n_stars', 'binpacking', 'smart']
 
-# Strategy to define partitions
-# STRATEGY: Final[PartitionStrategy] = 'n_stars'
-# STRATEGY: Final[PartitionStrategy] = 'binpacking'
-STRATEGY: Final[PartitionStrategy] = 'smart'
-
-# If true, adds a delay to worker number 2
-ADD_DELAY_TO_WORKERS: Final[bool] = True
-# ADD_DELAY_TO_WORKER_2: Final[bool] = False
-
 # Some constants
+# First experiment
+ADD_DELAY_TO_WORKERS: Final[bool] = True  # If true, adds a delay to worker number 2
 N_WORKERS: Final = 30
 N_STARS: Final = 300
 N_FEATURES: Final = 20000
+
+# Second experiment (same number of workers as Spark and less variability)
+# N_WORKERS: Final = 3
+# N_FEATURES: Final = 6
+
+# Second - First Approach
+# N_STARS: Final = 90
+# ADD_DELAY_TO_WORKERS: Final[bool] = True  # If true, adds a delay to worker number 2
+
+# Second - second Approach
+# N_STARS: Final = 90
+# ADD_DELAY_TO_WORKERS: Final[bool] = False  # If true, adds a delay to worker number 2
+
+# Second - third Approach
+# N_STARS: Final = 300
+# ADD_DELAY_TO_WORKERS: Final[bool] = True  # If true, adds a delay to worker number 2
+
+# Second - Fourth Approach
+# N_STARS: Final = 6
+# ADD_DELAY_TO_WORKERS: Final[bool] = False  # If true, adds a delay to worker number 2
+
 ITERATIONS: Final = 30
+# ITERATIONS: Final = 2
 
 # To print useful information
 DEBUG: Final = True
 
 # To save data/images
-SAVE_DATA: Final = True
-# SAVE_DATA: Final = False
-SAVE_IMAGES: Final = True
-# SAVE_IMAGES: Final = False
+SAVE_DATA: Final = False
+SAVE_IMAGES: Final = False
 
 # To plot images
 PLOT_IMAGES: Final = False
@@ -82,7 +95,7 @@ class Rdd:
 
 def collect(rdds: list[Rdd], partition_to_worker: PartitionToWorker, strategy: PartitionStrategy,
             delay_for_worker: Optional[DelayForWorker]
-) -> tuple[WorkerTimes, WorkerIdleTime, DelayForWorker, WorkerTimes]:
+            ) -> tuple[WorkerTimes, WorkerIdleTime, DelayForWorker, WorkerTimes]:
     """
     Simulates the collect() method of Spark.
     :param rdds: List of RDD to evaluate.
@@ -412,7 +425,7 @@ def __get_worker_id(worker_id: int) -> str:
 
 def __save_data(execution_times_worker: WorkerBarTimes, idle_times_worker: WorkerBarTimes,
                 sum_times_worker: WorkerBarTimes, strategy: PartitionStrategy,
-                random_seed: Optional[int]):
+                random_seed: Optional[int]) -> pd.DataFrame:
     """Saves the data in a CSV file."""
     data = []
     for worker_id in execution_times_worker:
@@ -425,7 +438,8 @@ def __save_data(execution_times_worker: WorkerBarTimes, idle_times_worker: Worke
 
     data = sorted(data, key=lambda x: x[2])
     df = pd.DataFrame(data, columns=['worker_id', 'type', 'iteration', 'time'])
-    df.to_csv(f'Simulator_results/data_{strategy}_random_{random_seed}.csv', index=False)
+    if SAVE_DATA:
+        df.to_csv(f'Simulator_results/data_{strategy}_random_{random_seed}.csv', index=False)
 
     # Generates a summary CSV which stores for every iteration, the mean and std of execution times, and idle times
     data = []
@@ -448,10 +462,15 @@ def __save_data(execution_times_worker: WorkerBarTimes, idle_times_worker: Worke
     df = pd.DataFrame(data, columns=['iteration', 'mean_execution_time', 'std_execution_time',
                                      'mean_idle_time', 'std_idle_time', 'max_sum_time', 'min_sum_time'])
 
-    df.to_csv(f'Simulator_results/summary_{strategy}_random_{random_seed}.csv', index=False)
+    if SAVE_DATA:
+        # DISPERSO_ es para el experimento que pidio Waldo para la tesis, para no sobreescribir los resultados que
+        # ya tenia
+        df.to_csv(f'Simulator_results/DISPERSO_summary_{strategy}_random_{random_seed}.csv', index=False)
+
+    return df
 
 
-def main(strategy: PartitionStrategy, random_seed: Optional[int] = None):
+def main(strategy: PartitionStrategy, random_seed: Optional[int] = None) -> pd.DataFrame:
     execution_times_worker: WorkerBarTimes = {}
     idle_times_worker: WorkerBarTimes = {}
     sum_times_worker: WorkerBarTimes = {}
@@ -487,7 +506,7 @@ def main(strategy: PartitionStrategy, random_seed: Optional[int] = None):
                 # Selects 10 workers to apply a delay
                 if random_seed:
                     np.random.seed(random_seed)
-                workers_to_delay = np.random.choice(range(N_WORKERS), 10, replace=False)
+                workers_to_delay = np.random.choice(range(N_WORKERS), min(11, N_WORKERS - 1), replace=False)
 
                 delay_for_worker: Optional[DelayForWorker] = {}
                 for worker_id in workers_to_delay:
@@ -535,16 +554,42 @@ def main(strategy: PartitionStrategy, random_seed: Optional[int] = None):
         generate_bar_charts(idle_times_worker, f'Strategy = {strategy}', 'Idle')
 
     # Generates a CSV with the data
-    if SAVE_DATA:
-        __save_data(execution_times_worker, idle_times_worker, sum_times_worker, strategy, random_seed)
+    return __save_data(execution_times_worker, idle_times_worker, sum_times_worker, strategy, random_seed)
+
+
+def save_df_second_experiment(data_df: pd.DataFrame, field: Literal['max_sum_time', 'mean_idle_time']):
+    """Saves data to a CSV file with the final results to plot the line charts in the Excel."""
+    data_df = data_df.pivot(index='iteration', columns='strategy', values=field)
+    # Sets iteration as a column instead of index
+    data_df = data_df.reset_index()
+    data_df['iteration'] = data_df['iteration'] + 1
+    data_df = data_df.set_index('iteration')
+
+    # Sets the order of the columns: iteration, sequential, n_stars, binpacking, smart
+    data_df = data_df[['sequential', 'n_stars', 'binpacking', 'smart']]
+
+    data_df.to_csv(
+        f'Simulator_results/summary_random_{field}_N_WORKERS_{N_WORKERS}_N_STARS_{N_STARS}_N_FEATURES_{N_FEATURES}_'
+        f'ADD_DELAY_TO_WORKERS_{ADD_DELAY_TO_WORKERS}_random_seed_{random_seed_to_test}.csv')
 
 
 if __name__ == '__main__':
-    for random_seed_to_test in range(100, 1000, 100):
+    for random_seed_to_test in range(100, 1000, 10000):
+        data = []
         for strategy_to_test in ['sequential', 'n_stars', 'binpacking', 'smart']:
             print(f'Strategy: {strategy_to_test} | Random seed: {random_seed_to_test}')
             print('====================================')
-            main(strategy=strategy_to_test, random_seed=random_seed_to_test)
+            saved_df = main(strategy=strategy_to_test, random_seed=random_seed_to_test)
+
+            # Gets the files 'summary_{strategy}_random_{random_seed}.csv' and stores the data.
+            # if strategy_to_test != 'sequential':
+            saved_df['strategy'] = strategy_to_test
+            data.append(saved_df)
+
+        # Plots the data in a line chart with the iteration in the x axis and the max_sum_time in the y axis
+        df = pd.concat(data)
+        save_df_second_experiment(df, 'mean_idle_time')
+        save_df_second_experiment(df, 'max_sum_time')
 
         break  # To just test one random seed
 
