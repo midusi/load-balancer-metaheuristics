@@ -1,0 +1,158 @@
+,origin_biomarker__name,created_biomarker__name,algorithm,best_model__fitness_function,execution_time
+0,Con muchas moléculas,"""Con muchas moléculas"" (FS optimized 35)",3,1,93
+1,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 70)",3,2,1466
+2,Nombre,"""Nombre"" (FS optimized 2)",1,1,5
+3,Con muchas moléculas,Huge biomarker,3,1,93
+4,test,"""test"" (FS optimized 38)",1,1,4
+5,"Breast Invasive Carcinoma (TCGA, Nature 2012)","""Breast Invasive Carcinoma (TCGA, Nature 2012)"" (FS optimized 72)",3,1,439
+6,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 39)",3,1,153
+7,Con muchas moléculas,"""Con muchas moléculas"" (FS optimized 7)",3,1,93
+8,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 40)",3,1,555
+9,Con muchas moléculas,"""Con muchas moléculas"" (FS optimized 21)",3,1,94
+10,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 41)",3,1,154
+11,Con muchas moléculas,"""Con muchas moléculas"" (FS optimized 29)",3,2,637
+12,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 42)",3,1,561
+13,Con muchas moléculas,"""Con muchas moléculas"" (FS optimized 23)",3,1,94
+14,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 65)",3,2,1793
+15,Con muchas moléculas,"""Con muchas moléculas"" (FS optimized 31)",3,3,39
+16,Con muchas moléculas,"""Con muchas moléculas"" (FS optimized 32)",3,3,1152
+17,Con muchas moléculas,"""Con muchas moléculas"" (FS optimized 33)",3,1,93
+18,Con muchas moléculas,"""Con muchas moléculas"" (FS optimized 34)",3,1,93
+19,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 66)",3,3,819
+20,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 67)",3,3,2056
+21,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 64)",3,2,729
+22,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 69)",3,2,729
+23,"Breast Invasive Carcinoma (TCGA, Nature 2012)","""Breast Invasive Carcinoma (TCGA, Nature 2012)"" (FS optimized 73)",3,1,93
+24,"Breast Invasive Carcinoma (TCGA, PanCancer Atlas)","""Breast Invasive Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 134)",3,2,0
+25,"Breast Invasive Carcinoma (TCGA, Nature 2012)","""Breast Invasive Carcinoma (TCGA, Nature 2012)"" (FS optimized 111)",3,1,94
+26,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 113)",3,1,217
+27,"Breast Invasive Carcinoma (TCGA, PanCancer Atlas)","""Breast Invasive Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 135)",3,2,0
+28,"Glioblastoma Multiforme (TCGA, PanCancer Atlas)","""Glioblastoma Multiforme (TCGA, PanCancer Atlas)"" (FS optimized 165)",3,2,637
+29,"Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)","""Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 118)",3,1,184
+30,"Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)","""Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 178)",3,2,808
+31,"Breast Invasive Carcinoma (TCGA, PanCancer Atlas)","""Breast Invasive Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 139)",3,1,2556
+32,"Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)","""Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 120)",3,1,334
+33,"Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)","""Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 121)",3,1,153
+34,"Glioblastoma Multiforme (TCGA, PanCancer Atlas)","""Glioblastoma Multiforme (TCGA, PanCancer Atlas)"" (FS optimized 167)",3,2,668
+35,"Breast Invasive Carcinoma (TCGA, PanCancer Atlas)","""Breast Invasive Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 138)",3,1,6806
+36,"Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)","""Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 124)",3,2,0
+37,"Breast Invasive Carcinoma (TCGA, PanCancer Atlas)","""Breast Invasive Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 141)",3,1,4933
+38,"Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)","""Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 126)",3,3,759
+39,"Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)","""Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 125)",3,2,1472
+40,"Brain Lower Grade Glioma (TCGA, PanCancer Atlas)","""Brain Lower Grade Glioma (TCGA, PanCancer Atlas)"" (FS optimized 143)",3,1,184
+41,"Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)","""Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 179)",3,3,1756
+42,"Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)","""Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 129)",3,2,728
+43,"Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)","""Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 169)",3,1,304
+44,"Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)","""Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 131)",3,2,728
+45,"Glioblastoma Multiforme (TCGA, PanCancer Atlas)","""Glioblastoma Multiforme (TCGA, PanCancer Atlas)"" (FS optimized 149)",3,1,291
+46,"Brain Lower Grade Glioma (TCGA, PanCancer Atlas)","""Brain Lower Grade Glioma (TCGA, PanCancer Atlas)"" (FS optimized 145)",3,1,2209
+47,"Brain Lower Grade Glioma (TCGA, PanCancer Atlas)","""Brain Lower Grade Glioma (TCGA, PanCancer Atlas)"" (FS optimized 148)",3,1,1095
+48,"Glioblastoma Multiforme (TCGA, PanCancer Atlas)","""Glioblastoma Multiforme (TCGA, PanCancer Atlas)"" (FS optimized 151)",3,1,289
+49,"Glioblastoma Multiforme (TCGA, PanCancer Atlas)","""Glioblastoma Multiforme (TCGA, PanCancer Atlas)"" (FS optimized 153)",3,1,220
+50,"Glioblastoma Multiforme (TCGA, PanCancer Atlas)","""Glioblastoma Multiforme (TCGA, PanCancer Atlas)"" (FS optimized 155)",3,1,238
+51,"Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)","""Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 171)",3,1,336
+52,"Glioblastoma Multiforme (TCGA, PanCancer Atlas)","""Glioblastoma Multiforme (TCGA, PanCancer Atlas)"" (FS optimized 158)",3,2,668
+53,"Glioblastoma Multiforme (TCGA, PanCancer Atlas)","""Glioblastoma Multiforme (TCGA, PanCancer Atlas)"" (FS optimized 159)",3,2,582
+54,"Glioblastoma Multiforme (TCGA, PanCancer Atlas)","""Glioblastoma Multiforme (TCGA, PanCancer Atlas)"" (FS optimized 161)",3,2,697
+55,"Glioblastoma Multiforme (TCGA, PanCancer Atlas)","""Glioblastoma Multiforme (TCGA, PanCancer Atlas)"" (FS optimized 163)",3,3,998
+56,"Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)","""Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 173)",3,1,1060
+57,"Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)","""Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 180)",3,2,0
+58,"Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)","""Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 174)",3,1,441
+59,"Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)","""Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 175)",3,1,215
+60,"Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)","""Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 177)",3,2,0
+61,"Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)","""Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 176)",3,1,594
+62,"Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)","""Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 181)",3,2,730
+63,"Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)","""Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 184)",3,2,939
+64,"Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)","""Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 182)",3,2,879
+65,"Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)","""Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 183)",3,2,1906
+66,"Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)","""Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 185)",3,2,3143
+67,"Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)","""Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 186)",3,3,8971
+68,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 187)",3,1,154
+69,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 188)",3,1,153
+70,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 189)",3,1,215
+71,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 191)",3,2,759
+72,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 190)",3,2,879
+73,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 192)",3,2,3313
+74,"Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)","""Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 193)",3,1,244
+75,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 194)",3,2,1257
+76,"Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)","""Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 195)",3,1,849
+77,"Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)","""Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 197)",3,1,276
+78,"Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)","""Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 196)",3,1,275
+79,"Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)","""Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 199)",3,1,459
+80,"Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)","""Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 198)",3,1,607
+81,"Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)","""Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 201)",3,1,320
+82,"Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)","""Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 200)",3,1,245
+83,"Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)","""Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 202)",3,1,343
+84,"Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)","""Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 133)",3,2,1166
+85,"Breast Invasive Carcinoma (TCGA, Nature 2012)","""Breast Invasive Carcinoma (TCGA, Nature 2012)"" (FS optimized 76)",3,3,1181
+86,"Breast Invasive Carcinoma (TCGA, Nature 2012)","""Breast Invasive Carcinoma (TCGA, Nature 2012)"" (FS optimized 74)",3,2,1242
+87,"Breast Invasive Carcinoma (TCGA, Nature 2012)","""Breast Invasive Carcinoma (TCGA, Nature 2012)"" (FS optimized 75)",3,2,10215
+88,"Breast Invasive Carcinoma (TCGA, Nature 2012)","""Breast Invasive Carcinoma (TCGA, Nature 2012)"" (FS optimized 77)",3,3,210
+89,"Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)","""Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 128)",3,3,1530
+90,"Glioblastoma Multiforme (TCGA, PanCancer Atlas)","""Glioblastoma Multiforme (TCGA, PanCancer Atlas)"" (FS optimized 164)",3,3,668
+91,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 112)",3,1,153
+92,"Bladder Urothelial Carcinoma (TCGA, PanCancer Atlas)","""Bladder Urothelial Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 79)",3,1,154
+93,"Bladder Urothelial Carcinoma (TCGA, PanCancer Atlas)","""Bladder Urothelial Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 78)",3,1,835
+94,"Colorectal Adenocarcinoma (TCGA, PanCancer Atlas)","""Colorectal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 103)",3,1,154
+95,"Bladder Urothelial Carcinoma (TCGA, PanCancer Atlas)","""Bladder Urothelial Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 80)",3,2,416
+96,"Bladder Urothelial Carcinoma (TCGA, PanCancer Atlas)","""Bladder Urothelial Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 81)",3,2,608
+97,"Brain Lower Grade Glioma (TCGA, PanCancer Atlas)","""Brain Lower Grade Glioma (TCGA, PanCancer Atlas)"" (FS optimized 144)",3,1,894
+98,"Brain Lower Grade Glioma (TCGA, PanCancer Atlas)","""Brain Lower Grade Glioma (TCGA, PanCancer Atlas)"" (FS optimized 92)",3,3,2119
+99,"Brain Lower Grade Glioma (TCGA, PanCancer Atlas)","""Brain Lower Grade Glioma (TCGA, PanCancer Atlas)"" (FS optimized 93)",3,3,9868
+100,"Bladder Urothelial Carcinoma (TCGA, PanCancer Atlas)","""Bladder Urothelial Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 82)",3,3,761
+101,"Bladder Urothelial Carcinoma (TCGA, PanCancer Atlas)","""Bladder Urothelial Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 83)",3,3,1925
+102,"Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)","""Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 116)",3,1,185
+103,"Bladder Urothelial Carcinoma (TCGA, PanCancer Atlas)","""Bladder Urothelial Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 85)",3,3,698
+104,"Bladder Urothelial Carcinoma (TCGA, PanCancer Atlas)","""Bladder Urothelial Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 84)",3,3,850
+105,"Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)","""Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 117)",3,1,290
+106,"Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)","""Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 119)",3,1,299
+107,"Breast Invasive Carcinoma (TCGA, PanCancer Atlas)","""Breast Invasive Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 136)",3,1,244
+108,"Brain Lower Grade Glioma (TCGA, PanCancer Atlas)","""Brain Lower Grade Glioma (TCGA, PanCancer Atlas)"" (FS optimized 86)",3,1,155
+109,"Brain Lower Grade Glioma (TCGA, PanCancer Atlas)","""Brain Lower Grade Glioma (TCGA, PanCancer Atlas)"" (FS optimized 94)",3,1,154
+110,"Brain Lower Grade Glioma (TCGA, PanCancer Atlas)","""Brain Lower Grade Glioma (TCGA, PanCancer Atlas)"" (FS optimized 88)",3,2,0
+111,"Brain Lower Grade Glioma (TCGA, PanCancer Atlas)","""Brain Lower Grade Glioma (TCGA, PanCancer Atlas)"" (FS optimized 87)",3,1,892
+112,"Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)","""Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 122)",3,1,280
+113,"Brain Lower Grade Glioma (TCGA, PanCancer Atlas)","""Brain Lower Grade Glioma (TCGA, PanCancer Atlas)"" (FS optimized 89)",3,2,1297
+114,"Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)","""Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 123)",3,1,266
+115,"Breast Invasive Carcinoma (TCGA, PanCancer Atlas)","""Breast Invasive Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 137)",3,1,840
+116,"Brain Lower Grade Glioma (TCGA, PanCancer Atlas)","""Brain Lower Grade Glioma (TCGA, PanCancer Atlas)"" (FS optimized 90)",3,2,0
+117,"Brain Lower Grade Glioma (TCGA, PanCancer Atlas)","""Brain Lower Grade Glioma (TCGA, PanCancer Atlas)"" (FS optimized 91)",3,2,0
+118,"Brain Lower Grade Glioma (TCGA, PanCancer Atlas)","""Brain Lower Grade Glioma (TCGA, PanCancer Atlas)"" (FS optimized 95)",3,1,153
+119,"Breast Invasive Carcinoma (TCGA, PanCancer Atlas)","""Breast Invasive Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 140)",3,1,2986
+120,"Brain Lower Grade Glioma (TCGA, PanCancer Atlas)","""Brain Lower Grade Glioma (TCGA, PanCancer Atlas)"" (FS optimized 96)",3,2,0
+121,"Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)","""Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 127)",3,3,849
+122,"Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)","""Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 130)",3,2,758
+123,"Glioblastoma Multiforme (TCGA, PanCancer Atlas)","""Glioblastoma Multiforme (TCGA, PanCancer Atlas)"" (FS optimized 166)",3,2,668
+124,"Breast Invasive Carcinoma (TCGA, PanCancer Atlas)","""Breast Invasive Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 97)",3,1,214
+125,"Breast Invasive Carcinoma (TCGA, PanCancer Atlas)","""Breast Invasive Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 98)",3,1,1557
+126,"Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)","""Esophageal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 132)",3,2,1379
+127,"Breast Invasive Carcinoma (TCGA, PanCancer Atlas)","""Breast Invasive Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 99)",3,2,0
+128,"Breast Invasive Carcinoma (TCGA, PanCancer Atlas)","""Breast Invasive Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 100)",3,2,2745
+129,"Brain Lower Grade Glioma (TCGA, PanCancer Atlas)","""Brain Lower Grade Glioma (TCGA, PanCancer Atlas)"" (FS optimized 142)",3,2,0
+130,"Colorectal Adenocarcinoma (TCGA, PanCancer Atlas)","""Colorectal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 104)",3,2,1120
+131,"Colorectal Adenocarcinoma (TCGA, PanCancer Atlas)","""Colorectal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 105)",3,3,2512
+132,"Breast Invasive Carcinoma (TCGA, PanCancer Atlas)","""Breast Invasive Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 101)",3,3,19505
+133,"Brain Lower Grade Glioma (TCGA, PanCancer Atlas)","""Brain Lower Grade Glioma (TCGA, PanCancer Atlas)"" (FS optimized 146)",3,1,826
+134,"Brain Lower Grade Glioma (TCGA, PanCancer Atlas)","""Brain Lower Grade Glioma (TCGA, PanCancer Atlas)"" (FS optimized 147)",3,1,696
+135,"Colorectal Adenocarcinoma (TCGA, PanCancer Atlas)","""Colorectal Adenocarcinoma (TCGA, PanCancer Atlas)"" (FS optimized 106)",3,1,184
+136,"Brain Lower Grade Glioma (TCGA, PanCancer Atlas)","""Brain Lower Grade Glioma (TCGA, PanCancer Atlas)"" (FS optimized 107)",3,1,153
+137,"Glioblastoma Multiforme (TCGA, PanCancer Atlas)","""Glioblastoma Multiforme (TCGA, PanCancer Atlas)"" (FS optimized 150)",3,1,184
+138,"Bladder Urothelial Carcinoma (TCGA, PanCancer Atlas)","""Bladder Urothelial Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 108)",3,1,154
+139,"Glioblastoma Multiforme (TCGA, PanCancer Atlas)","""Glioblastoma Multiforme (TCGA, PanCancer Atlas)"" (FS optimized 154)",3,1,184
+140,"Glioblastoma Multiforme (TCGA, PanCancer Atlas)","""Glioblastoma Multiforme (TCGA, PanCancer Atlas)"" (FS optimized 152)",3,1,184
+141,"Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)","""Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 170)",3,1,1601
+142,"Glioblastoma Multiforme (TCGA, PanCancer Atlas)","""Glioblastoma Multiforme (TCGA, PanCancer Atlas)"" (FS optimized 156)",3,1,184
+143,"Glioblastoma Multiforme (TCGA, PanCancer Atlas)","""Glioblastoma Multiforme (TCGA, PanCancer Atlas)"" (FS optimized 157)",3,2,524
+144,"Glioblastoma Multiforme (TCGA, PanCancer Atlas)","""Glioblastoma Multiforme (TCGA, PanCancer Atlas)"" (FS optimized 160)",3,2,668
+145,"Glioblastoma Multiforme (TCGA, PanCancer Atlas)","""Glioblastoma Multiforme (TCGA, PanCancer Atlas)"" (FS optimized 162)",3,2,641
+146,"Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)","""Head and Neck Squamous Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 172)",3,1,876
+147,"Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)","""Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 203)",3,2,668
+148,"Acute Myeloid Leukemia (TCGA, PanCancer Atlas)","""Acute Myeloid Leukemia (TCGA, PanCancer Atlas)"" (FS optimized 204)",3,1,188
+149,"Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)","""Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 205)",3,2,698
+150,"Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)","""Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 206)",3,2,533
+151,"Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)","""Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 207)",3,2,729
+152,"Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)","""Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 208)",3,2,927
+153,"Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)","""Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 210)",3,3,788
+154,"Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)","""Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 209)",3,2,1263
+155,"Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)","""Kidney Renal Papillary Cell Carcinoma (TCGA, PanCancer Atlas)"" (FS optimized 211)",3,3,1820
+156,Breast Biomarker,"""Breast Biomarker"" (FS optimized 229)",3,1,54

@@ -88,6 +88,7 @@ In the `paper_load_balancing` folder you can also find all the results grouped i
   - A sheet with the results of execution times. Detailing mean, standard deviation for each execution strategy. And the minimum value among all. In addition, a bar chart is included for visual comparison.
   - A sheet file with the same structure as the previous point but with the idle time results of the cluster workers.
   - A sheet with the predicted time data and the actual time, together with comparative graphs between both times for each of the three predictive models to be evaluated.
+  - A sheet called `FS experiments execution times.csv` with all the execution times of the experiments carried out in Multiomix using all the models with and without the ED strategy.
 
 The `simulator.py` file contains the development of the Spark load balancing simulator: it simulates the delegation of partitions to a specific node in order to demonstrate the advantages of the PhD race. In the `simulator_data_summary.py` file, it uses all the results of the `simulator.py` to build an overall summary that compares the 3 strategies and defines which one was the best for each of the iterations. These results are stored in the `Results/simulator_results` folder.
 
